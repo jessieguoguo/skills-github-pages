@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能猜数游戏</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: "PingFang SC", sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            margin: 20px 0;
+        }
+        .number-btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #dddfe4;
+            background: #ffffff;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .number-btn:hover:not(:disabled) {
+            background: #e6f3ff;
+            border-color: #006eff;
+        }
+        .number-btn:disabled {
+            background: #f5f5f5;
+            color: #cccccc;
+            cursor: not-allowed;
+        }
+        .status {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .restart-btn {
+            background: #006eff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>智能猜数游戏</h1>
+        <div class="status">
+            <p>已尝试次数：<span id="attempts">0</span></p>
+            <p id="hint">请输入第一个猜测数字</p>
+        </div>
+        <div class="number-grid" id="numberGrid"></div>
+        <button class="restart-btn" onclick="restartGame()">重新开始</button>
+    </div>
+
+    <script>
+        let targetNumber;
+        let attempts;
+        let gameOver = false;
+        let minRange = 1;
+        let maxRange = 100;
+
+        function initGame() {
+            targetNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            gameOver = false;
+            updateDisplay();
+        }
+
+        function createNumberButtons() {
+            const grid = document.getElementById('numberGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 1; i <= 100; i++) {
+                const button = document.createElement('button');
+                button.className = 'number-btn';
+                button.id = `btn-${i}`;
+                button.textContent = i;
+                button.value = i;
+                button.onclick = () => handleGuess(i);
+                grid.appendChild(button);
+            }
+        }
+
+        function handleGuess(guess) {
+            if (gameOver) return;
+            
+            attempts++;
+            const $guessBtn = $(`#btn-${guess}`);
+            $guessBtn.prop('disabled', true);
+
+            if (guess === targetNumber) {
+                gameOver = true;
+                $("#hint").html(`🎉 正确！答案就是 ${targetNumber}<br>总共尝试次数：${attempts}`);
+                $(".number-btn").prop('disabled', true);
+                $guessBtn.css({
+                    'background': '#00c853',
+                    'color': 'white'
+                });
+            } else {
+                if (guess < targetNumber) {
+                    minRange = guess + 1;
+                    $(`button[id^='btn-']`).each(function() {
+                        const num = parseInt(this.value);
+                        if (num <= guess) $(this).prop('disabled', true);
+                    });
+                    $("#hint").text(`🔼 第 ${attempts} 次猜测：${guess} 太小了`);
+                } else {
+                    maxRange = guess - 1;
+                    $(`button[id^='btn-']`).each(function() {
+                        const num = parseInt(this.value);
+                        if (num >= guess) $(this).prop('disabled', true);
+                    });
+                    $("#hint").text(`🔽 第 ${attempts} 次猜测：${guess} 太大了`);
+                }
+            }
+            $("#attempts").text(attempts);
+        }
+
+        function restartGame() {
+            $(".number-btn").prop('disabled', false).css({
+                'background': '#ffffff',
+                'color': '#1a1a1a'
+            });
+            minRange = 1;
+            maxRange = 100;
+            initGame();
+        }
+
+        function updateDisplay() {
+            $("#attempts").text(attempts);
+            $("#hint").text(attempts === 0 ? "请输入第一个猜测数字" : "继续猜测");
+        }
+
+        $(document).ready(() => {
+            initGame();
+            createNumberButtons();
+        });
+    </script>
+</body>
+</html>
