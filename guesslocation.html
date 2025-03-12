@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜一猜我在哪里</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px auto;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(11, 40px); /* 10列 + 1列行号 */
+            grid-template-rows: repeat(11, 40px); /* 10行 + 1行列号 */
+            gap: 5px;
+            position: relative;
+        }
+
+        .label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .circle {
+            width: 40px;
+            height: 40px;
+            background-color: #ccc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .circle:hover {
+            background-color: #aaa;
+        }
+
+        #hint {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        #guess-count {
+            margin-top: 10px;
+            font-size: 1.1em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>猜一猜我在哪里</h1>
+    <div class="game-container">
+        <div class="grid-container" id="grid-container">
+            <!-- 第一行：列号 -->
+            <div class="label"></div> <!-- 左上角空白 -->
+            <div class="label">0</div>
+            <div class="label">1</div>
+            <div class="label">2</div>
+            <div class="label">3</div>
+            <div class="label">4</div>
+            <div class="label">5</div>
+            <div class="label">6</div>
+            <div class="label">7</div>
+            <div class="label">8</div>
+            <div class="label">9</div>
+
+            <!-- 后续行：行号 + 圆圈 -->
+            <div class="label">0</div>
+            <div class="circle" data-row="0" data-col="0"></div>
+            <div class="circle" data-row="0" data-col="1"></div>
+            <div class="circle" data-row="0" data-col="2"></div>
+            <div class="circle" data-row="0" data-col="3"></div>
+            <div class="circle" data-row="0" data-col="4"></div>
+            <div class="circle" data-row="0" data-col="5"></div>
+            <div class="circle" data-row="0" data-col="6"></div>
+            <div class="circle" data-row="0" data-col="7"></div>
+            <div class="circle" data-row="0" data-col="8"></div>
+            <div class="circle" data-row="0" data-col="9"></div>
+
+            <div class="label">1</div>
+            <div class="circle" data-row="1" data-col="0"></div>
+            <div class="circle" data-row="1" data-col="1"></div>
+            <div class="circle" data-row="1" data-col="2"></div>
+            <div class="circle" data-row="1" data-col="3"></div>
+            <div class="circle" data-row="1" data-col="4"></div>
+            <div class="circle" data-row="1" data-col="5"></div>
+            <div class="circle" data-row="1" data-col="6"></div>
+            <div class="circle" data-row="1" data-col="7"></div>
+            <div class="circle" data-row="1" data-col="8"></div>
+            <div class="circle" data-row="1" data-col="9"></div>
+
+            <div class="label">2</div>
+            <div class="circle" data-row="2" data-col="0"></div>
+            <div class="circle" data-row="2" data-col="1"></div>
+            <div class="circle" data-row="2" data-col="2"></div>
+            <div class="circle" data-row="2" data-col="3"></div>
+            <div class="circle" data-row="2" data-col="4"></div>
+            <div class="circle" data-row="2" data-col="5"></div>
+            <div class="circle" data-row="2" data-col="6"></div>
+            <div class="circle" data-row="2" data-col="7"></div>
+            <div class="circle" data-row="2" data-col="8"></div>
+            <div class="circle" data-row="2" data-col="9"></div>
+
+            <div class="label">3</div>
+            <div class="circle" data-row="3" data-col="0"></div>
+            <div class="circle" data-row="3" data-col="1"></div>
+            <div class="circle" data-row="3" data-col="2"></div>
+            <div class="circle" data-row="3" data-col="3"></div>
+            <div class="circle" data-row="3" data-col="4"></div>
+            <div class="circle" data-row="3" data-col="5"></div>
+            <div class="circle" data-row="3" data-col="6"></div>
+            <div class="circle" data-row="3" data-col="7"></div>
+            <div class="circle" data-row="3" data-col="8"></div>
+            <div class="circle" data-row="3" data-col="9"></div>
+
+            <div class="label">4</div>
+            <div class="circle" data-row="4" data-col="0"></div>
+            <div class="circle" data-row="4" data-col="1"></div>
+            <div class="circle" data-row="4" data-col="2"></div>
+            <div class="circle" data-row="4" data-col="3"></div>
+            <div class="circle" data-row="4" data-col="4"></div>
+            <div class="circle" data-row="4" data-col="5"></div>
+            <div class="circle" data-row="4" data-col="6"></div>
+            <div class="circle" data-row="4" data-col="7"></div>
+            <div class="circle" data-row="4" data-col="8"></div>
+            <div class="circle" data-row="4" data-col="9"></div>
+
+            <div class="label">5</div>
+            <div class="circle" data-row="5" data-col="0"></div>
+            <div class="circle" data-row="5" data-col="1"></div>
+            <div class="circle" data-row="5" data-col="2"></div>
+            <div class="circle" data-row="5" data-col="3"></div>
+            <div class="circle" data-row="5" data-col="4"></div>
+            <div class="circle" data-row="5" data-col="5"></div>
+            <div class="circle" data-row="5" data-col="6"></div>
+            <div class="circle" data-row="5" data-col="7"></div>
+            <div class="circle" data-row="5" data-col="8"></div>
+            <div class="circle" data-row="5" data-col="9"></div>
+
+            <div class="label">6</div>
+            <div class="circle" data-row="6" data-col="0"></div>
+            <div class="circle" data-row="6" data-col="1"></div>
+            <div class="circle" data-row="6" data-col="2"></div>
+            <div class="circle" data-row="6" data-col="3"></div>
+            <div class="circle" data-row="6" data-col="4"></div>
+            <div class="circle" data-row="6" data-col="5"></div>
+            <div class="circle" data-row="6" data-col="6"></div>
+            <div class="circle" data-row="6" data-col="7"></div>
+            <div class="circle" data-row="6" data-col="8"></div>
+            <div class="circle" data-row="6" data-col="9"></div>
+
+            <div class="label">7</div>
+            <div class="circle" data-row="7" data-col="0"></div>
+            <div class="circle" data-row="7" data-col="1"></div>
+            <div class="circle" data-row="7" data-col="2"></div>
+            <div class="circle" data-row="7" data-col="3"></div>
+            <div class="circle" data-row="7" data-col="4"></div>
+            <div class="circle" data-row="7" data-col="5"></div>
+            <div class="circle" data-row="7" data-col="6"></div>
+            <div class="circle" data-row="7" data-col="7"></div>
+            <div class="circle" data-row="7" data-col="8"></div>
+            <div class="circle" data-row="7" data-col="9"></div>
+
+            <div class="label">8</div>
+            <div class="circle" data-row="8" data-col="0"></div>
+            <div class="circle" data-row="8" data-col="1"></div>
+            <div class="circle" data-row="8" data-col="2"></div>
+            <div class="circle" data-row="8" data-col="3"></div>
+            <div class="circle" data-row="8" data-col="4"></div>
+            <div class="circle" data-row="8" data-col="5"></div>
+            <div class="circle" data-row="8" data-col="6"></div>
+            <div class="circle" data-row="8" data-col="7"></div>
+            <div class="circle" data-row="8" data-col="8"></div>
+            <div class="circle" data-row="8" data-col="9"></div>
+
+            <div class="label">9</div>
+            <div class="circle" data-row="9" data-col="0"></div>
+            <div class="circle" data-row="9" data-col="1"></div>
+            <div class="circle" data-row="9" data-col="2"></div>
+            <div class="circle" data-row="9" data-col="3"></div>
+            <div class="circle" data-row="9" data-col="4"></div>
+            <div class="circle" data-row="9" data-col="5"></div>
+            <div class="circle" data-row="9" data-col="6"></div>
+            <div class="circle" data-row="9" data-col="7"></div>
+            <div class="circle" data-row="9" data-col="8"></div>
+            <div class="circle" data-row="9" data-col="9"></div>
+        </div>
+    </div>
+    <p id="hint"></p>
+    <p id="guess-count">猜测次数: 0</p>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const circles = document.querySelectorAll('.circle');
+            const hint = document.getElementById('hint');
+            const guessCountElement = document.getElementById('guess-count');
+            let targetRow, targetCol;
+            let guessCount = 0;
+
+            // 随机生成目标位置
+            function generateTarget() {
+                targetRow = Math.floor(Math.random() * 10);
+                targetCol = Math.floor(Math.random() * 10);
+            }
+
+            // 处理点击事件
+            function handleClick(event) {
+                const clickedRow = parseInt(event.target.dataset.row);
+                const clickedCol = parseInt(event.target.dataset.col);
+
+                guessCount++;
+                guessCountElement.textContent = `猜测次数: ${guessCount}`;
+
+                if (clickedRow === targetRow && clickedCol === targetCol) {
+                    hint.textContent = "恭喜你，猜对了！";
+                    event.target.style.backgroundColor = 'green';
+                } else {
+                    giveHint(clickedRow, clickedCol);
+                }
+            }
+
+            // 给出提示
+            function giveHint(clickedRow, clickedCol) {
+                let rowHint = '';
+                let colHint = '';
+
+                if (clickedRow < targetRow) {
+                    rowHint = '向下';
+                } else if (clickedRow > targetRow) {
+                    rowHint = '向上';
+                }
+
+                if (clickedCol < targetCol) {
+                    colHint = '向右';
+                } else if (clickedCol > targetCol) {
+                    colHint = '向左';
+                }
+
+                hint.textContent = `${rowHint} ${colHint}`.trim();
+            }
+
+            // 初始化游戏
+            generateTarget();
+            circles.forEach(circle => {
+                circle.addEventListener('click', handleClick);
+            });
+        });
+    </script>
+</body>
+</html>
