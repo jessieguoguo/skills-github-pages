@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>密信转换器</title>
+    <style>
+        :root {
+            --tencent-blue: #2A5CA7;
+            --tencent-gray: #F5F3E7;
+            --accent-color: #D9B611;
+            --border-color: #789262;
+            --control-bg: #E8F0FE;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, var(--tencent-gray));
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(42, 92, 167, 0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            color: var(--tencent-blue);
+            text-align: center;
+            margin-bottom: 40px;
+            font-weight: 500;
+            font-size: 2.4em;
+            letter-spacing: 2px;
+        }
+
+        .grids-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .grid-box {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(42, 92, 167, 0.08);
+            border: 1px solid rgba(120, 146, 98, 0.15);
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .grid-box h3 {
+            color: var(--tencent-blue);
+            text-align: center;
+            margin: 0 0 20px 0;
+            font-size: 1.4em;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .grid {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+        }
+
+        .grid td {
+            min-width: 50px;
+            height: 50px;
+            border: 1.5px solid rgba(120, 146, 98, 0.3);
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .control-panel {
+            background: var(--control-bg);
+            padding: 24px;
+            border-radius: 12px;
+            margin: 40px auto;
+            border: 1px solid rgba(42, 92, 167, 0.1);
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            align-items: center;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid rgba(120, 146, 98, 0.2);
+        }
+
+        select, input {
+            padding: 10px 14px;
+            border: 1px solid rgba(42, 92, 167, 0.2);
+            border-radius: 6px;
+            background: white;
+            font-size: 15px;
+            color: var(--tencent-blue);
+            flex: 1;
+        }
+
+        button {
+            background: var(--tencent-blue);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(42, 92, 167, 0.2);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #inputSection {
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
+
+        #inputText {
+            width: 100%;
+            padding: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            height: 120px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        #algorithmLog {
+            background: rgba(234, 241, 251, 0.3);
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 40px;
+            border: 1px dashed rgba(42, 92, 167, 0.2);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎋 密信转换器</h1>
+        
+        <div id="inputSection">
+            <textarea id="inputText" 
+                      placeholder="请输入1-36个中文字符..."
+                      maxlength="36"></textarea>
+            <div style="text-align: center; margin-top: 24px;">
+                <button onclick="generateGrids()">📜 生成智能表格</button>
+            </div>
+        </div>
+
+        <div class="grids-container">
+            <div class="grid-box">
+                <h3>明文表格</h3>
+                <div id="originalGrid"></div>
+            </div>
+            <div class="grid-box">
+                <h3>密文表格</h3>
+                <div id="cipherGrid"></div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <div class="control-item">
+                    <select id="axis" onchange="updateDirection()">
+                        <option value="row">行操作</option>
+                        <option value="col">列操作</option>
+                    </select>
+                </div>
+                
+                <div class="control-item">
+                    <span>第</span>
+                    <input type="number" id="index" min="1" value="1">
+                    <span id="axisLabel">行</span>
+                </div>
+
+                <div class="control-item">
+                    <select id="direction"></select>
+                </div>
+
+                <div class="control-item">
+                    <span>移动</span>
+                    <input type="number" id="steps" min="1" value="1">
+                    <span>格</span>
+                </div>
+
+                <div style="grid-column: 1 / -1; display: flex; gap: 16px; justify-content: center;">
+                    <button onclick="performShift()">🔀 执行移位</button>
+                    <button onclick="playProcess()">▶️ 播放过程</button>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h3 style="color: var(--tencent-blue); text-align: center; margin-bottom: 20px;">📖 加密算法记录</h3>
+            <div id="algorithmLog"></div>
+        </div>
+    </div>
+
+    <script>
+        let originalMatrix = [];
+        let cipherMatrix = [];
+        let algorithmSteps = [];
+        let currentConfig = { rows: 0, cols: 0 };
+
+        const sizeConfig = [
+            {min:1,  max:4,  rows:2,  cols:2},
+            {min:5,  max:6,  rows:3,  cols:2},
+            {min:7,  max:9,  rows:3,  cols:3},
+            {min:10, max:12, rows:4,  cols:3},
+            {min:13, max:16, rows:4,  cols:4},
+            {min:17, max:20, rows:5,  cols:4},
+            {min:21, max:25, rows:5,  cols:5},
+            {min:26, max:30, rows:6,  cols:5},
+            {min:31, max:36, rows:6,  cols:6}
+        ];
+
+        function calculateSize(length) {
+            for(let config of sizeConfig) {
+                if(length >= config.min && length <= config.max) {
+                    return config;
+                }
+            }
+            return {rows:6, cols:6};
+        }
+
+        function generateGrids() {
+            const input = document.getElementById('inputText').value.replace(/\s/g, '');
+            if(!input || input.length > 36) {
+                alert("请输入1-36个中文字符！");
+                return;
+            }
+
+            currentConfig = calculateSize(input.length);
+            originalMatrix = [];
+            let index = 0;
+
+            for(let i=0; i<currentConfig.rows; i++) {
+                const row = [];
+                for(let j=0; j<currentConfig.cols; j++) {
+                    row.push(index < input.length ? input[index++] : '');
+                }
+                originalMatrix.push(row);
+            }
+
+            cipherMatrix = JSON.parse(JSON.stringify(originalMatrix));
+            algorithmSteps = [];
+            renderGrids();
+            updateControlLimits();
+            updateDirection();
+            updateAlgorithmLog();
+        }
+
+        function renderGrids() {
+            renderGrid('originalGrid', originalMatrix);
+            renderGrid('cipherGrid', cipherMatrix);
+        }
+
+        function renderGrid(containerId, matrix) {
+            const container = document.getElementById(containerId);
+            let html = '<table class="grid">';
+            matrix.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => html += `<td>${cell || ''}</td>`);
+                html += '</tr>';
+            });
+            container.innerHTML = html + '</table>';
+        }
+
+        function updateControlLimits() {
+            const axis = document.getElementById('axis').value;
+            document.getElementById('index').max = axis === 'row' ? currentConfig.rows : currentConfig.cols;
+            document.getElementById('steps').max = axis === 'row' ? currentConfig.cols-1 : currentConfig.rows-1;
+        }
+
+        function updateDirection() {
+            const axis = document.getElementById('axis').value;
+            const directionSelect = document.getElementById('direction');
+            directionSelect.innerHTML = axis === 'row' 
+                ? '<option value="left">左移</option><option value="right">右移</option>'
+                : '<option value="up">上移</option><option value="down">下移</option>';
+            document.getElementById('axisLabel').textContent = axis === 'row' ? '行' : '列';
+            updateControlLimits();
+        }
+
+        function performShift() {
+            const axis = document.getElementById('axis').value;
+            const index = parseInt(document.getElementById('index').value) - 1;
+            const steps = parseInt(document.getElementById('steps').value);
+            const direction = document.getElementById('direction').value;
+
+            const step = { 
+                axis, 
+                index, 
+                steps, 
+                direction, 
+                rows: currentConfig.rows, 
+                cols: currentConfig.cols 
+            };
+            algorithmSteps.push(step);
+            applyShift(step);
+            updateAlgorithmLog();
+        }
+
+        function applyShift(step) {
+            if(step.axis === 'row') {
+                const row = cipherMatrix[step.index];
+                const effectiveSteps = step.steps % step.cols;
+                cipherMatrix[step.index] = step.direction === 'left' 
+                    ? [...row.slice(effectiveSteps), ...row.slice(0, effectiveSteps)]
+                    : [...row.slice(-effectiveSteps), ...row.slice(0, -effectiveSteps)];
+            } else {
+                const colData = cipherMatrix.map(row => row[step.index]);
+                const effectiveSteps = step.steps % step.rows;
+                const shifted = step.direction === 'up' 
+                    ? [...colData.slice(effectiveSteps), ...colData.slice(0, effectiveSteps)]
+                    : [...colData.slice(-effectiveSteps), ...colData.slice(0, -effectiveSteps)];
+                cipherMatrix.forEach((row, i) => row[step.index] = shifted[i]);
+            }
+            renderGrid('cipherGrid', cipherMatrix);
+        }
+
+        function updateAlgorithmLog() {
+            const directionMap = {
+                'left': '←左移',
+                'right': '→右移',
+                'up': '↑上移',
+                'down': '↓下移'
+            };
+            const log = algorithmSteps.map((step, i) => 
+                `${i+1}. 第${step.index+1}${step.axis === 'row' ? '行' : '列'} ${directionMap[step.direction]} ${step.steps}格`
+            ).join('<br>');
+            document.getElementById('algorithmLog').innerHTML = log || "尚未进行任何加密操作";
+        }
+
+        async function playProcess() {
+            if(!algorithmSteps.length) return;
+            
+            const currentState = JSON.stringify(cipherMatrix);
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            
+            // 重置到初始状态
+            cipherMatrix = JSON.parse(JSON.stringify(originalMatrix));
+            renderGrid('cipherGrid', cipherMatrix);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 逐步执行
+            for(const step of algorithmSteps) {
+                applyShift(step);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            // 恢复当前状态
+            cipherMatrix = JSON.parse(currentState);
+            renderGrid('cipherGrid', cipherMatrix);
+            document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+        }
+    </script>
+</body>
+</html>

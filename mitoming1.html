@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>密信解密器</title>
+    <style>
+        :root {
+            --primary-color: #2A5CA7;
+            --accent-color: #D9B611;
+            --bg-color: #F5F3E7;
+            --border-color: #789262;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 500;
+            font-size: 2.2em;
+        }
+
+        .grids-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+        }
+
+        .grid-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        .grid-box h3 {
+            color: var(--primary-color);
+            text-align: center;
+            margin: 0 0 15px 0;
+        }
+
+        .grid {
+            border-collapse: collapse;
+            background: white;
+            margin: 0 auto;
+        }
+
+        .grid td {
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--border-color);
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .control-panel {
+            background: rgba(234, 241, 251, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            max-width: 800px;
+            margin: 30px auto;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #inputSection {
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        #inputText {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            height: 100px;
+        }
+
+        #algorithmLog {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            min-height: 80px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎋 密信解密器</h1>
+        
+        <div id="inputSection">
+            <textarea id="inputText" 
+                      placeholder="请输入36字以内的密信内容，如遇空格请输入空格..."
+                      maxlength="36"></textarea>
+            <div style="text-align: center; margin-top: 15px;">
+                <button onclick="generateGrids()">生成表格</button>
+            </div>
+        </div>
+
+        <div class="grids-container">
+            <div class="grid-box">
+                <h3>密文表格</h3>
+                <div id="originalGrid"></div>
+            </div>
+            <div class="grid-box">
+                <h3>明文表格</h3>
+                <div id="cipherGrid"></div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <select id="axis" onchange="updateDirection()">
+                    <option value="row">行操作</option>
+                    <option value="col">列操作</option>
+                </select>
+                
+                <span>第</span>
+                <input type="number" id="index" min="1" max="6" value="1" style="width:60px">
+                <span id="axisLabel">行</span>
+
+                <select id="direction"></select>
+
+                <span>移动</span>
+                <input type="number" id="steps" min="1" max="5" value="1" style="width:60px">
+                <span>格</span>
+
+                <button onclick="performShift()">执行移位</button>
+                <button onclick="playProcess()">播放过程</button>
+            </div>
+        </div>
+
+        <div>
+            <h3 style="color: var(--primary-color); text-align: center;">我的加密算法</h3>
+            <div id="algorithmLog"></div>
+        </div>
+    </div>
+
+    <script>
+        let originalMatrix = [];
+        let cipherMatrix = [];
+        let algorithmSteps = [];
+
+        function generateGrids() {
+            const input = document.getElementById('inputText').value;
+            algorithmSteps = [];
+            updateAlgorithmLog();
+
+            originalMatrix = [];
+            let index = 0;
+            for (let i = 0; i < 6; i++) {
+                const row = [];
+                for (let j = 0; j < 6; j++) {
+                    row.push(index < input.length ? input[index++] : '');
+                }
+                originalMatrix.push(row);
+            }
+
+            cipherMatrix = JSON.parse(JSON.stringify(originalMatrix));
+            renderGrid('originalGrid', originalMatrix);
+            renderGrid('cipherGrid', cipherMatrix);
+            updateDirection();
+        }
+
+        function renderGrid(containerId, matrix) {
+            const container = document.getElementById(containerId);
+            let html = '<table class="grid">';
+            matrix.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => {
+                    html += `<td>${cell || ''}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        function updateDirection() {
+            const axis = document.getElementById('axis').value;
+            const directionSelect = document.getElementById('direction');
+            if (axis === 'row') {
+                directionSelect.innerHTML = `
+                    <option value="left">左移</option>
+                    <option value="right">右移</option>
+                `;
+                document.getElementById('axisLabel').textContent = '行';
+            } else {
+                directionSelect.innerHTML = `
+                    <option value="up">上移</option>
+                    <option value="down">下移</option>
+                `;
+                document.getElementById('axisLabel').textContent = '列';
+            }
+        }
+
+        function performShift() {
+            const axis = document.getElementById('axis').value;
+            const index = parseInt(document.getElementById('index').value);
+            const steps = parseInt(document.getElementById('steps').value);
+            const direction = document.getElementById('direction').value;
+
+            const stepDesc = {
+                axis,
+                index: index - 1,
+                steps,
+                direction
+            };
+            algorithmSteps.push(stepDesc);
+            
+            applyShift(axis, index - 1, steps, direction);
+            updateAlgorithmLog();
+        }
+
+        function applyShift(axis, index, steps, direction, targetMatrix = cipherMatrix) {
+            if (axis === 'row') {
+                shiftRow(index, steps, direction, targetMatrix);
+            } else {
+                shiftColumn(index, steps, direction, targetMatrix);
+            }
+            renderGrid('cipherGrid', targetMatrix);
+        }
+
+        function shiftRow(rowIndex, steps, direction, matrix) {
+            const row = matrix[rowIndex];
+            const effectiveSteps = steps % 6;
+            if (direction === 'left') {
+                matrix[rowIndex] = [...row.slice(effectiveSteps), ...row.slice(0, effectiveSteps)];
+            } else {
+                matrix[rowIndex] = [...row.slice(-effectiveSteps), ...row.slice(0, -effectiveSteps)];
+            }
+        }
+
+        function shiftColumn(colIndex, steps, direction, matrix) {
+            const colData = matrix.map(row => row[colIndex]);
+            const effectiveSteps = steps % 6;
+            let shifted;
+            if (direction === 'up') {
+                shifted = [...colData.slice(effectiveSteps), ...colData.slice(0, effectiveSteps)];
+            } else {
+                shifted = [...colData.slice(-effectiveSteps), ...colData.slice(0, -effectiveSteps)];
+            }
+            matrix.forEach((row, i) => row[colIndex] = shifted[i]);
+        }
+
+        function updateAlgorithmLog() {
+            const log = algorithmSteps.map((step, index) => 
+                `${index+1}. 第${step.index+1}${step.axis === 'row' ? '行' : '列'}${getDirectionText(step.direction)}${step.steps}格`
+            ).join('<br>');
+            document.getElementById('algorithmLog').innerHTML = log || "尚未进行任何加密操作";
+        }
+
+        function getDirectionText(direction) {
+            return {
+                'left': '左移',
+                'right': '右移',
+                'up': '上移',
+                'down': '下移'
+            }[direction];
+        }
+
+        async function playProcess() {
+            if (algorithmSteps.length === 0) return;
+
+            const currentState = JSON.stringify(cipherMatrix);
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            
+            // 重置到初始状态
+            cipherMatrix = JSON.parse(JSON.stringify(originalMatrix));
+            renderGrid('cipherGrid', cipherMatrix);
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 逐步执行每个步骤
+            let tempMatrix = JSON.parse(JSON.stringify(originalMatrix));
+            for (const step of algorithmSteps) {
+                const tempCopy = JSON.parse(JSON.stringify(tempMatrix));
+                applyShift(step.axis, step.index, step.steps, step.direction, tempCopy);
+                cipherMatrix = tempCopy;
+                renderGrid('cipherGrid', cipherMatrix);
+                tempMatrix = tempCopy;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            // 恢复当前状态
+            cipherMatrix = JSON.parse(currentState);
+            renderGrid('cipherGrid', cipherMatrix);
+            document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+        }
+    </script>
+</body>
+</html>
