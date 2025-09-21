@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>厦门地铁线路规划验证</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        subway1: '#E67E22', // 1号线橙色
+                        subway2: '#27AE60', // 2号线绿色
+                        subway3: '#3498DB', // 3号线蓝色
+                        brt: '#9B59B6',     // BRT紫色
+                        primary: '#1E40AF',
+                        secondary: '#64748B',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .station-drag {
+                cursor: grab;
+            }
+            .station-drag:active {
+                cursor: grabbing;
+            }
+            .route-step {
+                @apply flex items-center gap-2 my-2 p-3 border rounded-lg bg-white shadow-sm;
+            }
+            .valid-route {
+                @apply bg-green-50 border-green-200;
+            }
+            .invalid-route {
+                @apply bg-red-50 border-red-200;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 页面标题 -->
+        <header class="mb-8 text-center">
+            <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-gray-800 mb-2">厦门地铁线路规划验证</h1>
+            <p class="text-gray-600">低碳出行，智慧规划</p>
+        </header>
+        
+        <!-- 题目描述 -->
+        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">出行规划任务</h2>
+            <p class="text-gray-700 leading-relaxed mb-4">
+                周末，住海峡国际社区（临近"软件园二期"地铁站）的你们一家人，准备前往"城市上空的公园"——石头皮山公园（临近"火炬园"地铁站）逛逛。为低碳出行，全家人决定乘坐地铁或BRT。
+                这里有一张厦门市的地铁路线图，我们需要为全家人规划所有从家到达公园的路线。
+            </p>
+            <p class="text-gray-700 font-medium">任务要求：规划所有从家到达公园的合理路线，在下方区域验证。</p>
+        </section>
+        
+        <!-- 地铁路线图 -->
+        <section class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-4">
+                <h3 class="text-lg font-medium mb-3 text-gray-800">厦门地铁路线图</h3>
+                <div class="flex justify-center">
+                    <img src="https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/7b7f18be6cc243bb93d3e335e8c232bc.png~tplv-a9rns2rl98-24:720:720.png?rcl=20250921233550867CE1479C712F3299FC&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1759073751&x-signature=YWyiNFxCbaTzBGjH770IX%2FelQcY%3D" 
+                         alt="厦门市地铁路线图，标注了1号线、2号线、3号线和BRT线路及各站点位置，其中火炬园站和软件园二期站被红色方框标记" 
+                         class="max-w-full h-auto rounded-lg border border-gray-200">
+                </div>
+            </div>
+        </section>
+        
+        <!-- 可拖动的站点 -->
+        <section class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-medium mb-4 text-gray-800">可拖动站点</h3>
+                <p class="text-gray-600 mb-4 text-sm">提示：拖动下方站点到路线规划区域的空白处</p>
+                
+                <div id="stations-container" class="flex flex-wrap gap-3 min-h-[100px]">
+                    <!-- 站点将通过JS动态生成 -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- 路线规划区域 -->
+        <section class="mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-medium mb-4 text-gray-800">路线规划</h3>
+                
+                <div id="route-container" class="mb-6 min-h-[150px]">
+                    <div class="route-step" data-step="0">
+                        <span class="font-medium">从</span>
+                        <div class="station-drop border-2 border-dashed border-gray-300 rounded px-3 py-1 min-w-[100px] text-center" data-type="start">
+                            <span class="text-gray-400">请选择站点</span>
+                        </div>
+                        <span class="font-medium">出发，乘坐</span>
+                        <select class="line-select border border-gray-300 rounded px-3 py-1" data-type="line">
+                            <option value="">请选择线路</option>
+                            <option value="1">1号线</option>
+                            <option value="2">2号线</option>
+                            <option value="3">3号线</option>
+                            <option value="brt">BRT</option>
+                        </select>
+                        <span class="font-medium">，到达</span>
+                        <div class="station-drop border-2 border-dashed border-gray-300 rounded px-3 py-1 min-w-[100px] text-center" data-type="end">
+                            <span class="text-gray-400">请选择站点</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center">
+                    <button id="add-transfer" class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg transition-all duration-200 flex items-center gap-2">
+                        <i class="fa fa-plus-circle"></i> 添加换乘
+                    </button>
+                    
+                    <button id="verify-route" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-all duration-200 flex items-center gap-2">
+                        <i class="fa fa-check-circle"></i> 验证路线
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 验证结果区域 -->
+        <section>
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-medium mb-4 text-gray-800">验证结果</h3>
+                <div id="results-container" class="space-y-4 min-h-[100px]">
+                    <p class="text-gray-500 italic text-center py-4">尚未验证任何路线</p>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <script>
+        // 地铁线路与站点数据
+        const subwayData = {
+            lines: {
+                1: { name: '1号线', color: 'bg-subway1' },
+                2: { name: '2号线', color: 'bg-subway2' },
+                3: { name: '3号线', color: 'bg-subway3' },
+                brt: { name: 'BRT', color: 'bg-brt' }
+            },
+            stations: [
+                { name: '软件园二期', lines: [2] },
+                { name: '火炬园', lines: [1, 3] },
+                { name: '吕厝', lines: [1, 2] },
+                { name: '五缘湾', lines: [2, 3] },
+                { name: '蔡塘', lines: [2] },
+                { name: '双十中学', lines: [3, 'brt'] },
+                { name: '体育中心', lines: [2, 3] },
+                { name: '古地石', lines: [2] },
+                { name: '市政服务中心', lines: [3] },
+                { name: '金山', lines: [3] },
+                { name: '安兜', lines: [3] },
+                { name: '湖里创新园', lines: [3] },
+                { name: '坂尚', lines: [3] },
+                { name: '小东山村', lines: [3] },
+                { name: '塘边', lines: [1] },
+                { name: '乌石浦', lines: [1] },
+                { name: '莲花路口', lines: [1] },
+                { name: '莲坂', lines: [1] },
+                { name: '湖滨东路', lines: [1] },
+                { name: '斗西路', lines: [1] },
+                { name: '二市', lines: [1] },
+                { name: '文灶', lines: [1] },
+                { name: '将军祠', lines: [1] },
+                { name: '金榜公园', lines: [1] },
+                { name: '火车站', lines: [1] },
+                { name: '厦门火车站', lines: [3] },
+                { name: '龙山桥', lines: [3] },
+                { name: '东芳山庄', lines: [3] },
+                { name: '前埔枢纽站', lines: [3] },
+                { name: '何厝', lines: [2] },
+                { name: '观音山', lines: [2] },
+                { name: '两岸金融中心', lines: [2] },
+                { name: '五通', lines: [2] },
+                { name: '湿地公园', lines: [2] },
+                { name: '钟宅', lines: [2] },
+                { name: '岭兜', lines: [2] },
+                { name: '后埔', lines: [2] },
+                { name: '江头', lines: [2] },
+                { name: '育秀东路', lines: [2] },
+                { name: '高崎', lines: [1] },
+                { name: '殿前', lines: [1] },
+                { name: '县后', lines: [3] }
+            ]
+        };
+        
+        // 正确路线数据
+        const correctRoutes = [
+            [
+                { start: '软件园二期', line: 2, end: '吕厝' },
+                { start: '吕厝', line: 1, end: '火炬园' }
+            ],
+            [
+                { start: '软件园二期', line: 2, end: '五缘湾' },
+                { start: '五缘湾', line: 3, end: '火炬园' }
+            ],
+            [
+                { start: '软件园二期', line: 2, end: '蔡塘' },
+                { start: '蔡塘', line: 'brt', end: '双十中学' },
+                { start: '双十中学', line: 3, end: '火炬园' }
+            ],
+            [
+                { start: '软件园二期', line: 2, end: '体育中心' },
+                { start: '体育中心', line: 3, end: '火炬园' }
+            ]
+        ];
+        
+        // 站点间距离数据（站数）
+        const stationDistances = {
+            '软件园二期': {
+                '古地石': 1,
+                '岭兜': 2,
+                '蔡塘': 3,
+                '洪文': 4,
+                '后埔': 5,
+                '江头': 6,
+                '吕厝': 7,
+                '育秀东路': 8,
+                '体育中心': 9,
+                '何厝': 1,
+                '观音山': 2,
+                '两岸金融中心': 3,
+                '五通': 4,
+                '湿地公园': 5,
+                '钟宅': 6,
+                '五缘湾': 7
+            },
+            '吕厝': {
+                '江头': 1,
+                '后埔': 2,
+                '蔡塘': 3,
+                '岭兜': 4,
+                '古地石': 5,
+                '软件园二期': 6,
+                '乌石浦': 1,
+                '塘边': 2,
+                '火炬园': 3
+            },
+            '五缘湾': {
+                '钟宅': 1,
+                '湿地公园': 2,
+                '五通': 3,
+                '两岸金融中心': 4,
+                '观音山': 5,
+                '何厝': 6,
+                '软件园二期': 7,
+                '双十中学': 1,
+                '湖里创新园': 2,
+                '坂尚': 3,
+                '小东山村': 4,
+                '安兜': 5,
+                '金山': 6,
+                '市政服务中心': 7,
+                '古地石': 8,
+                '洪文': 9,
+                '蔡塘': 10,
+                '火炬园': 8
+            },
+            '蔡塘': {
+                '后埔': 1,
+                '江头': 2,
+                '吕厝': 3,
+                '乌石浦': 4,
+                '塘边': 5,
+                '火炬园': 6,
+                '岭兜': 1,
+                '古地石': 2,
+                '软件园二期': 3,
+                '双十中学': 4
+            },
+            '双十中学': {
+                '五缘湾': 1,
+                '湖里创新园': 1,
+                '蔡塘': 4,
+                '火炬园': 5
+            },
+            '体育中心': {
+                '育秀东路': 1,
+                '吕厝': 2,
+                '江头': 3,
+                '后埔': 4,
+                '蔡塘': 5,
+                '火炬园': 6
+            },
+            '火炬园': {
+                '塘边': 1,
+                '乌石浦': 2,
+                '吕厝': 3,
+                '体育中心': 6,
+                '蔡塘': 6,
+                '双十中学': 5,
+                '五缘湾': 8
+            }
+        };
+        
+        // 初始化可拖动站点
+        function initStations() {
+            const container = document.getElementById('stations-container');
+            
+            subwayData.stations.forEach(station => {
+                const stationEl = document.createElement('div');
+                stationEl.className = `station-drag px-4 py-2 rounded-lg text-white font-medium shadow-md transition-all duration-200 hover:shadow-lg ${getStationColor(station)}`;
+                stationEl.draggable = true;
+                stationEl.textContent = station.name;
+                stationEl.dataset.name = station.name;
+                
+                // 添加拖动事件
+                stationEl.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', station.name);
+                    stationEl.classList.add('opacity-50');
+                });
+                
+                stationEl.addEventListener('dragend', () => {
+                    stationEl.classList.remove('opacity-50');
+                });
+                
+                container.appendChild(stationEl);
+            });
+        }
+        
+        // 获取站点颜色（根据第一条线路）
+        function getStationColor(station) {
+            if (station.lines.length === 0) return 'bg-gray-500';
+            const firstLine = station.lines[0];
+            return subwayData.lines[firstLine].color;
+        }
+        
+        // 初始化路线规划区域的拖放功能
+        function initDropZones() {
+            const dropZones = document.querySelectorAll('.station-drop');
+            
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('border-primary', 'bg-blue-50');
+                });
+                
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('border-primary', 'bg-blue-50');
+                });
+                
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('border-primary', 'bg-blue-50');
+                    
+                    const stationName = e.dataTransfer.getData('text/plain');
+                    zone.innerHTML = `<span>${stationName}</span>`;
+                    zone.dataset.station = stationName;
+                });
+            });
+        }
+        
+        // 添加换乘步骤
+        function addTransferStep() {
+            const container = document.getElementById('route-container');
+            const stepCount = container.children.length;
+            
+            const newStep = document.createElement('div');
+            newStep.className = 'route-step';
+            newStep.dataset.step = stepCount;
+            newStep.innerHTML = `
+                <span class="font-medium">乘坐</span>
+                <select class="line-select border border-gray-300 rounded px-3 py-1" data-type="line">
+                    <option value="">请选择线路</option>
+                    <option value="1">1号线</option>
+                    <option value="2">2号线</option>
+                    <option value="3">3号线</option>
+                    <option value="brt">BRT</option>
+                </select>
+                <span class="font-medium">，到达</span>
+                <div class="station-drop border-2 border-dashed border-gray-300 rounded px-3 py-1 min-w-[100px] text-center" data-type="end">
+                    <span class="text-gray-400">请选择站点</span>
+                </div>
+                <button class="remove-step text-red-500 hover:text-red-700 p-1" data-step="${stepCount}">
+                    <i class="fa fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(newStep);
+            
+            // 为新添加的元素初始化拖放和事件
+            const newDropZone = newStep.querySelector('.station-drop');
+            initDropZone(newDropZone);
+            
+            const removeBtn = newStep.querySelector('.remove-step');
+            removeBtn.addEventListener('click', (e) => {
+                const stepToRemove = e.target.closest('.remove-step').dataset.step;
+                if (container.children.length > 1) { // 至少保留一个步骤
+                    container.removeChild(document.querySelector(`[data-step="${stepToRemove}"]`));
+                    // 更新步骤编号
+                    updateStepNumbers();
+                } else {
+                    alert('至少需要保留一个行程步骤');
+                }
+            });
+        }
+        
+        // 更新步骤编号
+        function updateStepNumbers() {
+            const steps = document.querySelectorAll('#route-container .route-step');
+            steps.forEach((step, index) => {
+                step.dataset.step = index;
+                const removeBtn = step.querySelector('.remove-step');
+                if (removeBtn) {
+                    removeBtn.dataset.step = index;
+                }
+            });
+        }
+        
+        // 初始化单个拖放区域
+        function initDropZone(zone) {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('border-primary', 'bg-blue-50');
+            });
+            
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('border-primary', 'bg-blue-50');
+            });
+            
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('border-primary', 'bg-blue-50');
+                
+                const stationName = e.dataTransfer.getData('text/plain');
+                zone.innerHTML = `<span>${stationName}</span>`;
+                zone.dataset.station = stationName;
+            });
+        }
+        
+        // 验证路线
+        function verifyRoute() {
+            const steps = document.querySelectorAll('#route-container .route-step');
+            const route = [];
+            
+            // 收集路线信息
+            steps.forEach((step, index) => {
+                const lineSelect = step.querySelector('.line-select');
+                const line = lineSelect.value;
+                
+                let startStation, endStation;
+                
+                if (index === 0) {
+                    // 第一步有起点
+                    startStation = step.querySelector('[data-type="start"]').dataset.station;
+                    endStation = step.querySelector('[data-type="end"]').dataset.station;
+                } else {
+                    // 换乘步骤，起点是上一步的终点
+                    const prevStep = steps[index - 1];
+                    const prevEnd = prevStep.querySelector('[data-type="end"]').dataset.station;
+                    startStation = prevEnd;
+                    endStation = step.querySelector('[data-type="end"]').dataset.station;
+                }
+                
+                if (!startStation || !endStation || !line) {
+                    showResult(false, '请填写完整路线信息');
+                    return false;
+                }
+                
+                route.push({
+                    start: startStation,
+                    line: line,
+                    end: endStation
+                });
+            });
+            
+            // 检查是否为正确路线
+            const isCorrect = checkIfCorrectRoute(route);
+            
+            if (isCorrect) {
+                // 计算时间
+                const time = calculateRouteTime(route);
+                // 生成路线描述
+                const routeDescription = generateRouteDescription(route);
+                showResult(true, `${routeDescription}，总耗时约 ${time} 分钟`);
+            } else {
+                showResult(false, '路线不正确，请重新规划');
+            }
+            
+            return isCorrect;
+        }
+        
+        // 检查是否为正确路线
+        function checkIfCorrectRoute(route) {
+            // 检查起点是否为软件园二期，终点是否为火炬园
+            if (route[0].start !== '软件园二期' || route[route.length - 1].end !== '火炬园') {
+                return false;
+            }
+            
+            // 检查是否与正确路线之一匹配
+            for (const correctRoute of correctRoutes) {
+                if (route.length !== correctRoute.length) continue;
+                
+                let match = true;
+                for (let i = 0; i < route.length; i++) {
+                    if (
+                        route[i].start !== correctRoute[i].start ||
+                        route[i].line != correctRoute[i].line || // 使用 != 而非 !== 是为了处理字符串与数字比较
+                        route[i].end !== correctRoute[i].end
+                    ) {
+                        match = false;
+                        break;
+                    }
+                }
+                
+                if (match) return true;
+            }
+            
+            return false;
+        }
+        
+        // 计算路线时间
+        function calculateRouteTime(route) {
+            let totalTime = 0;
+            
+            // 计算每段行程的时间（每站2分钟）
+            route.forEach(segment => {
+                let stationsCount = 0;
+                
+                // 查找两站之间的站数
+                if (stationDistances[segment.start] && stationDistances[segment.start][segment.end]) {
+                    stationsCount = stationDistances[segment.start][segment.end];
+                } else if (stationDistances[segment.end] && stationDistances[segment.end][segment.start]) {
+                    stationsCount = stationDistances[segment.end][segment.start];
+                } else {
+                    // 如果没有数据，假设为默认值
+                    stationsCount = 3;
+                }
+                
+                totalTime += stationsCount * 2;
+            });
+            
+            // 计算换乘时间（地铁间换乘5分钟，地铁与BRT换乘10分钟）
+            for (let i = 1; i < route.length; i++) {
+                const prevLine = route[i-1].line;
+                const currLine = route[i].line;
+                
+                // 判断是否为地铁与BRT换乘
+                if ((prevLine === 'brt' && ['1', '2', '3'].includes(currLine)) || 
+                    (currLine === 'brt' && ['1', '2', '3'].includes(prevLine))) {
+                    totalTime += 10; // 地铁与BRT换乘
+                } else {
+                    totalTime += 5; // 地铁间换乘
+                }
+            }
+            
+            return totalTime;
+        }
+        
+        // 生成路线描述
+        function generateRouteDescription(route) {
+            let description = `从${route[0].start}站出发，乘坐${getLineName(route[0].line)}，到达${route[0].end}站`;
+            
+            for (let i = 1; i < route.length; i++) {
+                description += `，换乘${getLineName(route[i].line)}，到达${route[i].end}站`;
+            }
+            
+            return description;
+        }
+        
+        // 获取线路名称
+        function getLineName(lineCode) {
+            return subwayData.lines[lineCode]?.name || lineCode;
+        }
+        
+        // 显示验证结果
+        function showResult(isCorrect, message) {
+            const resultsContainer = document.getElementById('results-container');
+            
+            // 如果是首次验证，清除提示文字
+            if (resultsContainer.querySelector('p.italic')) {
+                resultsContainer.innerHTML = '';
+            }
+            
+            const resultEl = document.createElement('div');
+            resultEl.className = `p-4 rounded-lg border ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`;
+            
+            const icon = isCorrect ? 
+                '<i class="fa fa-check-circle text-green-500 mr-2"></i>' : 
+                '<i class="fa fa-times-circle text-red-500 mr-2"></i>';
+                
+            resultEl.innerHTML = `
+                <div class="flex items-start">
+                    <div class="text-xl mt-0.5">${icon}</div>
+                    <div class="flex-1">
+                        <p class="${isCorrect ? 'text-green-800' : 'text-red-800'}">${message}</p>
+                        <p class="text-xs text-gray-500 mt-1">验证时间: ${new Date().toLocaleTimeString()}</p>
+                    </div>
+                </div>
+            `;
+            
+            resultsContainer.appendChild(resultEl);
+            
+            // 滚动到结果区域
+            resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化站点
+            initStations();
+            
+            // 初始化拖放区域
+            initDropZones();
+            
+            // 添加换乘按钮事件
+            document.getElementById('add-transfer').addEventListener('click', addTransferStep);
+            
+            // 验证路线按钮事件
+            document.getElementById('verify-route').addEventListener('click', verifyRoute);
+        });
+    </script>
+</body>
+</html>
