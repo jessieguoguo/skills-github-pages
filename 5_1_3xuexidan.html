@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>汉诺塔移动步骤填写</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind自定义颜色和字体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            neutral: '#F5F7FA',
+            success: '#52C41A',
+            warning: '#FAAD14',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .table-shadow {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      .input-focus {
+        @apply focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+      }
+      .btn-hover {
+        @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
+  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+    <!-- 标题区域 -->
+    <div class="bg-primary text-white p-6 md:p-8">
+      <h1 class="text-[clamp(1.5rem,3vw,2.2rem)] font-bold mb-2">汉诺塔移动步骤填写</h1>
+      <p class="opacity-90">请根据汉诺塔问题的解决思路，填写表格中的空白位置，然后点击验证按钮检查答案</p>
+    </div>
+    
+    <!-- 表格区域 -->
+    <div class="p-4 md:p-6 overflow-x-auto">
+      <table class="w-full border-collapse table-shadow rounded-lg overflow-hidden">
+        <thead>
+          <tr class="bg-primary text-white">
+            <th class="py-4 px-4 text-left">移动次数</th>
+            <th class="py-4 px-4 text-center">小环</th>
+            <th class="py-4 px-4 text-center">中环</th>
+            <th class="py-4 px-4 text-center">大环</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 移动次数1 -->
+          <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <td class="py-4 px-4 font-medium">1</td>
+            <td class="py-4 px-4">
+              <input type="text" id="step1-small" value="1到3" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="1到3">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step1-medium" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step1-large" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+          </tr>
+          
+          <!-- 移动次数2 -->
+          <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <td class="py-4 px-4 font-medium">2</td>
+            <td class="py-4 px-4">
+              <input type="text" id="step2-small" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step2-medium" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="1到2">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step2-large" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+          </tr>
+          
+          <!-- 移动次数3 -->
+          <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <td class="py-4 px-4 font-medium">3</td>
+            <td class="py-4 px-4">
+              <input type="text" id="step3-small" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="3到2">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step3-medium" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step3-large" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+          </tr>
+          
+          <!-- 移动次数4 -->
+          <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <td class="py-4 px-4 font-medium">4</td>
+            <td class="py-4 px-4">
+              <input type="text" id="step4-small" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step4-medium" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step4-large" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="1到3">
+            </td>
+          </tr>
+          
+          <!-- 移动次数5 -->
+          <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <td class="py-4 px-4 font-medium">5</td>
+            <td class="py-4 px-4">
+              <input type="text" id="step5-small" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="2到1">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step5-medium" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step5-large" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+          </tr>
+          
+          <!-- 移动次数6 -->
+          <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <td class="py-4 px-4 font-medium">6</td>
+            <td class="py-4 px-4">
+              <input type="text" id="step6-small" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step6-medium" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="2到3">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step6-large" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+          </tr>
+          
+          <!-- 移动次数7 -->
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="py-4 px-4 font-medium">7</td>
+            <td class="py-4 px-4">
+              <input type="text" id="step7-small" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="1到3">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step7-medium" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+            <td class="py-4 px-4">
+              <input type="text" id="step7-large" 
+                class="w-full p-2 border border-gray-300 rounded input-focus text-center"
+                data-correct="">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- 按钮区域 -->
+    <div class="p-4 md:p-6 flex justify-center gap-4 border-t border-gray-100">
+      <button id="verify-btn" class="bg-primary text-white px-6 py-3 rounded-lg font-medium btn-hover flex items-center gap-2">
+        <i class="fa fa-check-circle"></i> 验证答案
+      </button>
+      <button id="reset-btn" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium btn-hover flex items-center gap-2">
+        <i class="fa fa-refresh"></i> 重置
+      </button>
+    </div>
+  </div>
+  
+  <!-- 成功弹窗 -->
+  <div id="success-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+      <div class="text-center">
+        <div class="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fa fa-check text-2xl text-success"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">恭喜！</h2>
+        <p class="text-gray-600 mb-6">您已正确完成所有汉诺塔移动步骤的填写</p>
+        <button id="close-modal" class="bg-primary text-white px-6 py-3 rounded-lg font-medium btn-hover">
+          关闭
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 错误提示 -->
+  <div id="error-toast" class="fixed bottom-6 right-6 bg-warning text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2">
+    <i class="fa fa-exclamation-circle"></i>
+    <span>答案有误，请继续修改</span>
+  </div>
+
+  <script>
+    // 获取DOM元素
+    const verifyBtn = document.getElementById('verify-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const successModal = document.getElementById('success-modal');
+    const closeModal = document.getElementById('close-modal');
+    const errorToast = document.getElementById('error-toast');
+    const allInputs = document.querySelectorAll('input');
+    
+    // 验证功能
+    verifyBtn.addEventListener('click', () => {
+      let isAllCorrect = true;
+      
+      // 检查每个输入框
+      allInputs.forEach(input => {
+        const userAnswer = input.value.trim();
+        const correctAnswer = input.dataset.correct;
+        
+        // 验证答案并添加视觉反馈
+        if (userAnswer === correctAnswer) {
+          input.classList.remove('border-warning', 'border-red-500');
+          input.classList.add('border-success');
+        } else {
+          isAllCorrect = false;
+          input.classList.remove('border-success');
+          input.classList.add('border-warning');
+          
+          // 添加抖动动画效果
+          input.classList.add('animate-shake');
+          setTimeout(() => input.classList.remove('animate-shake'), 500);
+        }
+      });
+      
+      // 显示相应的反馈
+      if (isAllCorrect) {
+        // 显示成功弹窗
+        successModal.classList.remove('hidden');
+        setTimeout(() => {
+          successModal.classList.add('opacity-100');
+          successModal.querySelector('div').classList.remove('scale-95');
+          successModal.querySelector('div').classList.add('scale-100');
+        }, 10);
+      } else {
+        // 显示错误提示
+        errorToast.classList.remove('translate-y-20', 'opacity-0');
+        setTimeout(() => {
+          errorToast.classList.add('translate-y-0', 'opacity-100');
+        }, 10);
+        
+        // 3秒后自动隐藏错误提示
+        setTimeout(() => {
+          errorToast.classList.remove('translate-y-0', 'opacity-100');
+          errorToast.classList.add('translate-y-20', 'opacity-0');
+        }, 3000);
+      }
+    });
+    
+    // 重置功能
+    resetBtn.addEventListener('click', () => {
+      allInputs.forEach(input => {
+        // 只重置需要用户填写的部分
+        if (input.id !== 'step1-small') {
+          input.value = '';
+        }
+        input.classList.remove('border-success', 'border-warning', 'border-red-500');
+      });
+    });
+    
+    // 关闭弹窗
+    closeModal.addEventListener('click', () => {
+      successModal.classList.remove('opacity-100');
+      successModal.querySelector('div').classList.remove('scale-100');
+      successModal.querySelector('div').classList.add('scale-95');
+      setTimeout(() => {
+        successModal.classList.add('hidden');
+      }, 300);
+    });
+    
+    // 点击弹窗外部关闭弹窗
+    successModal.addEventListener('click', (e) => {
+      if (e.target === successModal) {
+        closeModal.click();
+      }
+    });
+    
+    // 添加抖动动画样式
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+      }
+      .animate-shake {
+        animation: shake 0.5s ease-in-out;
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
