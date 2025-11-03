@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>顺序结构我描述</title>
+<style>
+/* —— 布局与基础视觉 —— */
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+body{background:linear-gradient(135deg,#f5f7fa 0%,#e4e7eb 100%);padding:20px;min-height:100vh;color:#333}
+.container{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:300px 1fr;gap:20px}
+header{grid-column:1/-1;text-align:center;padding:20px 10px;background:#fff;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,.08)}
+h1{font-size:2.2rem;margin-bottom:6px;background:linear-gradient(90deg,#0081ff,#00c6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.description{color:#7f8c8d;font-size:1.05rem}
+/* —— 面板 —— */
+.editor-panel{background:#fff;border-radius:10px;padding:25px 22px;box-shadow:0 4px 15px rgba(0,0,0,.08);border-top:4px solid #0081ff;height:fit-content}
+.panel-title{font-size:1.3rem;color:#2c3e50;margin-bottom:18px;border-bottom:2px solid #f0f3f5;padding-bottom:8px}
+.form-group{margin-bottom:20px}
+label{display:block;margin-bottom:6px;font-weight:600;color:#34495e}
+input,textarea{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:8px;font-size:1rem;background:#f9fbfd;transition:.3s}
+input:focus,textarea:focus{border-color:#0081ff;box-shadow:0 0 0 3px rgba(0,129,255,.2);background:#fff;outline:none}
+button{border:none;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:600;transition:.3s;width:100%;padding:13px 18px;color:#fff;box-shadow:0 4px 10px rgba(0,129,255,.3)}
+button:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(0,129,255,.4)}
+#updateFlowchart{background:linear-gradient(135deg,#0081ff 0%,#00c6ff 100%)}
+/* —— 预览 —— */
+.preview-section{margin-top:24px;background:#e8f4ff;border-left:4px solid #0081ff;border-radius:8px;padding:18px}
+.preview-title{font-size:1.15rem;color:#2c3e50;margin-bottom:10px}
+.preview-box{background:#fff;padding:16px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.preview-item{display:flex;border-bottom:1px solid #eee;padding:6px 0 8px}
+.preview-item:last-child{border-bottom:none}
+.preview-label{min-width:90px;font-weight:600;color:#0081ff}
+/* —— 导出/重置 —— */
+.export-options{display:flex;gap:10px;margin-top:18px}
+.export-options button{flex:1}
+.btn-secondary{background:linear-gradient(135deg,#0081ff 0%,#7e57c2 100%)}
+.btn-warning{background:linear-gradient(135deg,#ff4757 0%,#ffa502 100%)}
+/* —— 流程图区 —— */
+.flowchart-container{background:#fff;border-radius:10px;padding:25px;box-shadow:0 4px 15px rgba(0,0,0,.08);border-top:4px solid #00c6ff;min-height:800px;overflow:auto}
+#flowchart{min-height:750px}
+/* —— 文本样式 —— */
+.node-text{fill:#fff;font-weight:600;font-size:15px;pointer-events:none;text-anchor:middle;dominant-baseline:middle}
+.node{cursor:default}
+@media(max-width:768px){.container{grid-template-columns:1fr}.export-options{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>顺序结构我描述</h1>
+  <p class="description">欧元兑换人民币的汇率计算器算法流程图</p>
+</header>
+
+<!-- ===== 左侧面板 ===== -->
+<div class="editor-panel">
+  <h2 class="panel-title">节点配置</h2>
+  <div class="form-group">
+      <label for="inputLabel">输入：</label>
+      <input id="inputLabel" type="text" placeholder=" ">
+  </div>
+  <div class="form-group">
+      <label for="process">处理：</label>
+      <textarea id="process" rows="2" placeholder=" "></textarea>
+  </div>
+  <div class="form-group">
+      <label for="output">输出：</label>
+      <textarea id="output" rows="2" placeholder=" "></textarea>
+  </div>
+  <button id="updateFlowchart">更新流程图</button>
+
+  <!-- 预览 -->
+  <div class="preview-section">
+    <h3 class="preview-title">流程图预览</h3>
+    <div class="preview-box">
+      <div class="preview-item"><span class="preview-label">开始</span><span>流程图开始</span></div>
+      <div class="preview-item"><span class="preview-label">输入：</span><span id="pInput"> </span></div>
+      <div class="preview-item"><span class="preview-label">处理：</span><span id="pProcess"> </span></div>
+      <div class="preview-item"><span class="preview-label">输出：</span><span id="pOutput"> </span></div>
+      <div class="preview-item"><span class="preview-label">结束</span><span>流程图结束</span></div>
+    </div>
+  </div>
+
+  <!-- 导出 / 重置 -->
+  <div class="export-options">
+    <button class="btn-secondary" id="exportPNG">导出 PNG</button>
+    <button class="btn-warning" id="reset">重置默认</button>
+  </div>
+</div>
+
+<!-- ===== 右侧流程图 ===== -->
+<div class="flowchart-container">
+  <h2 class="panel-title">流程图显示</h2>
+  <svg id="flowchart" width="100%" height="750"></svg>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+
+/* —— dom 助手 —— */
+const $=id=>document.getElementById(id);
+const flowchart=$('flowchart');
+const inputs={
+  inputLabel:$('inputLabel'),
+  process:$('process'),
+  output:$('output')
+};
+const previews={
+  input:$('pInput'),
+  process:$('pProcess'),
+  output:$('pOutput')
+};
+const defaultVal={
+  inputLabel:'',
+  process:'',
+  output:''
+};
+
+/* —— 绘图工具 —— */
+function arrowDefs(){
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  const marker=document.createElementNS('http://www.w3.org/2000/svg','marker');
+  marker.setAttribute('id','arrow');marker.setAttribute('orient','auto');
+  marker.setAttribute('markerWidth','10');marker.setAttribute('markerHeight','7');
+  marker.setAttribute('refX','9');marker.setAttribute('refY','3.5');
+  const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  poly.setAttribute('points','0 0,10 3.5,0 7');poly.setAttribute('fill','#2c3e50');
+  marker.appendChild(poly);defs.appendChild(marker);flowchart.appendChild(defs);
+}
+/* 文字 */
+function drawText(x,y,str,cls='node-text'){
+  const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+  t.setAttribute('x',x);t.setAttribute('y',y);
+  t.setAttribute('text-anchor','middle');
+  t.setAttribute('dominant-baseline','middle');
+  t.setAttribute('class',cls);t.textContent=str;
+  flowchart.appendChild(t);
+}
+/* 圆角矩形 */
+function roundRect(x,y,w,h,color,text){
+  const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);
+  r.setAttribute('rx',15);r.setAttribute('ry',15);r.setAttribute('fill',color);r.setAttribute('class','node');
+  flowchart.appendChild(r);drawText(x+w/2,y+h/2,text);
+}
+/* 平行四边形 */
+function para(x,y,w,h,color,text){
+  const s=20;
+  const pts=[[x+s,y],[x+w,y],[x+w-s,y+h],[x,y+h]].map(p=>p.join(',')).join(' ');
+  const p=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  p.setAttribute('points',pts);p.setAttribute('fill',color);p.setAttribute('class','node');
+  flowchart.appendChild(p);drawText(x+w/2,y+h/2,text);
+}
+/* 矩形 */
+function rect(x,y,w,h,color,text){
+  const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);
+  r.setAttribute('fill',color);r.setAttribute('class','node');
+  flowchart.appendChild(r);drawText(x+w/2,y+h/2,text);
+}
+/* 直线 */
+function straight(x1,y1,x2,y2,arrow=true){
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',`M ${x1} ${y1} L ${x2} ${y2}`);
+  p.setAttribute('stroke','#2c3e50');p.setAttribute('stroke-width',2);p.setAttribute('fill','none');
+  if(arrow)p.setAttribute('marker-end','url(#arrow)');flowchart.appendChild(p);
+}
+
+/* —— 主绘制 —— */
+function draw(){
+  flowchart.innerHTML='';arrowDefs();
+
+  const nW=180,nH=70,vGap=80;
+  const centerX=flowchart.clientWidth/2;
+
+  const startY=50;
+  roundRect(centerX-nW/2,startY,nW,nH,'#00c6ff','开始');
+
+  const inY=startY+vGap+nH;
+  para(centerX-nW/2,inY,nW,nH,'#0081ff',inputs.inputLabel.value||'输入');
+
+  const procY=inY+vGap+nH;
+  rect(centerX-nW/2,procY,nW,nH,'#7e57c2',inputs.process.value||'处理');
+
+  const outY=procY+vGap+nH;
+  para(centerX-nW/2,outY,nW,nH,'#0081ff',inputs.output.value||'输出');
+
+  const endY=outY+vGap+nH;
+  roundRect(centerX-nW/2,endY,nW,nH,'#00c6ff','结束');
+
+  /* 连线 */
+  straight(centerX,startY+nH,centerX,inY);                    // 开始→输入
+  straight(centerX,inY+nH,centerX,procY);                    // 输入→处理
+  straight(centerX,procY+nH,centerX,outY);                   // 处理→输出
+  straight(centerX,outY+nH,centerX,endY);                    // 输出→结束
+}
+
+/* —— 交互 —— */
+function syncPreview(){
+  previews.input.textContent=inputs.inputLabel.value||' ';
+  previews.process.textContent=inputs.process.value||' ';
+  previews.output.textContent=inputs.output.value||' ';
+}
+$('updateFlowchart').onclick =()=>{syncPreview();draw();};
+$('reset').onclick =()=>{
+  Object.keys(defaultVal).forEach(k=>inputs[k].value=defaultVal[k]);syncPreview();draw();
+};
+/* 导出 PNG */
+$('exportPNG').onclick =()=>{
+  const svgStr=new XMLSerializer().serializeToString(flowchart);
+  const canvas=document.createElement('canvas');
+  canvas.width=flowchart.clientWidth;canvas.height=flowchart.clientHeight;
+  const ctx=canvas.getContext('2d');
+  const img=new Image();
+  img.onload=()=>{ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0);
+    const a=document.createElement('a');a.download='顺序结构流程图.png';a.href=canvas.toDataURL('image/png');a.click();
+  };
+  img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svgStr)));
+};
+/* 按输入实时更新预览 */
+Object.values(inputs).forEach(el=>el.addEventListener('input',syncPreview));
+window.addEventListener('resize',draw);
+
+/* 初始化 */
+syncPreview();draw();
+
+});
+</script>
+</body>
+</html>
