@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>化大为小桶排序 - 可视化教学工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn {
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 12px 24px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(107, 114, 128, 0.4);
+        }
+        
+        .data-item {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .highlight {
+            background-color: #fef9c3;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+            z-index: 10;
+        }
+        
+        .bucket {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .bucket-header {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        
+        .step-indicator {
+            transition: all 0.3s ease;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-weight: 500;
+        }
+        
+        .step-active {
+            background-color: #6366f1;
+            color: white;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+    <div class="container max-w-6xl mx-auto">
+        <!-- 标题区域 -->
+        <div class="text-center mb-10 fade-in">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">化大为小桶排序</h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">可视化展示桶排序算法对30位学生体重数据进行排序的过程</p>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="card p-6 mb-6">
+            <!-- 步骤指示器 -->
+            <div class="flex justify-center mb-8">
+                <div class="flex space-x-2">
+                    <div class="step-indicator step-active">初始数据</div>
+                    <div class="step-indicator bg-gray-200 text-gray-600">创建桶</div>
+                    <div class="step-indicator bg-gray-200 text-gray-600">分配数据</div>
+                    <div class="step-indicator bg-gray-200 text-gray-600">桶内排序</div>
+                    <div class="step-indicator bg-gray-200 text-gray-600">合并结果</div>
+                </div>
+            </div>
+            
+            <!-- 原始数据展示 -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">原始数据（30位学生体重）</h2>
+                <div id="original-data" class="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-xl min-h-[80px]">
+                    <!-- 数据项将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 桶排序可视化区域 -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">桶排序过程</h2>
+                <div id="buckets-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <!-- 桶将通过JavaScript动态生成 -->
+                </div>
+                
+                <!-- 排序结果区域 -->
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">排序结果</h2>
+                    <div id="sorted-result" class="flex flex-wrap gap-2 p-4 bg-green-50 rounded-xl min-h-[80px]">
+                        <!-- 排序结果将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 控制按钮 -->
+            <div class="flex justify-center space-x-4 mt-8">
+                <button id="reset-btn" class="btn btn-secondary hidden">
+                    <i class="fas fa-redo mr-2"></i>重置
+                </button>
+                <button id="next-btn" class="btn btn-primary">
+                    <i class="fas fa-arrow-right mr-2"></i>下一步
+                </button>
+            </div>
+        </div>
+        
+        <!-- 说明区域 -->
+        <div class="card p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">算法说明</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-gray-700 mb-2">桶排序原理</h3>
+                    <p class="text-gray-600">桶排序是一种分布式排序算法，它将元素分配到有限数量的桶中，然后对每个桶分别排序，最后将各个桶中的元素合并得到有序序列。</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-700 mb-2">教学要点</h3>
+                    <ul class="list-disc pl-5 text-gray-600">
+                        <li>确定桶的数量和范围</li>
+                        <li>将元素分配到对应的桶中</li>
+                        <li>对每个桶内部进行排序</li>
+                        <li>合并所有桶得到最终结果</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentStep = 0;
+        let weights = [];
+        let buckets = [];
+        const minWeight = 25;
+        const maxWeight = 55;
+        const bucketCount = 3;
+        let bucketRanges = [];
+        
+        // DOM元素
+        const originalDataEl = document.getElementById('original-data');
+        const bucketsContainerEl = document.getElementById('buckets-container');
+        const sortedResultEl = document.getElementById('sorted-result');
+        const nextBtn = document.getElementById('next-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const stepIndicators = document.querySelectorAll('.step-indicator');
+        
+        // 初始化函数
+        function init() {
+            // 生成随机体重数据
+            weights = Array.from({length: 30}, () => 
+                Math.floor(Math.random() * (maxWeight - minWeight + 1)) + minWeight
+            );
+            
+            // 清空容器
+            originalDataEl.innerHTML = '';
+            bucketsContainerEl.innerHTML = '';
+            sortedResultEl.innerHTML = '';
+            
+            // 渲染原始数据
+            weights.forEach(weight => {
+                const weightEl = document.createElement('div');
+                weightEl.className = 'data-item bg-blue-100 text-blue-800';
+                weightEl.textContent = weight;
+                originalDataEl.appendChild(weightEl);
+            });
+            
+            // 重置步骤指示器
+            stepIndicators.forEach((indicator, index) => {
+                indicator.className = 'step-indicator bg-gray-200 text-gray-600';
+                if (index === 0) {
+                    indicator.className = 'step-indicator step-active';
+                }
+            });
+            
+            // 重置按钮状态
+            nextBtn.classList.remove('hidden');
+            resetBtn.classList.add('hidden');
+            
+            currentStep = 0;
+        }
+        
+        // 计算桶的范围
+        function calculateBucketRanges() {
+            const rangeSize = (maxWeight - minWeight) / bucketCount;
+            bucketRanges = [];
+            
+            for (let i = 0; i < bucketCount; i++) {
+                const start = minWeight + i * rangeSize;
+                const end = minWeight + (i + 1) * rangeSize;
+                bucketRanges.push({
+                    start: Math.floor(start),
+                    end: Math.floor(end)
+                });
+            }
+            
+            // 确保最后一个桶包含最大值
+            bucketRanges[bucketRanges.length - 1].end = maxWeight;
+        }
+        
+        // 创建桶
+        function createBuckets() {
+            bucketsContainerEl.innerHTML = '';
+            buckets = Array.from({length: bucketCount}, () => []);
+            
+            bucketRanges.forEach((range, index) => {
+                const bucketEl = document.createElement('div');
+                bucketEl.className = 'bucket bg-white border border-gray-200 overflow-hidden';
+                
+                bucketEl.innerHTML = `
+                    <div class="bucket-header bg-indigo-100 p-3 border-b border-gray-200">
+                        <h3 class="font-semibold text-indigo-800 text-center">桶${index + 1}</h3>
+                        <p class="text-sm text-indigo-600 text-center">${range.start} - ${range.end} kg</p>
+                    </div>
+                    <div class="bucket-content p-3 min-h-[200px] flex flex-wrap gap-2 content-start" id="bucket-${index}">
+                        <!-- 桶内数据将通过JavaScript动态添加 -->
+                    </div>
+                `;
+                
+                bucketsContainerEl.appendChild(bucketEl);
+            });
+        }
+        
+        // 分配数据到桶中
+        async function distributeData() {
+            // 复制原始数据，避免修改原数组
+            const tempWeights = [...weights];
+            
+            for (let i = 0; i < tempWeights.length; i++) {
+                const weight = tempWeights[i];
+                const weightEls = originalDataEl.querySelectorAll('.data-item');
+                
+                // 高亮当前数据
+                weightEls[i].classList.add('highlight');
+                
+                // 等待0.5秒
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // 找到对应的桶
+                let bucketIndex = -1;
+                for (let j = 0; j < bucketRanges.length; j++) {
+                    if (weight >= bucketRanges[j].start && weight <= bucketRanges[j].end) {
+                        bucketIndex = j;
+                        break;
+                    }
+                }
+                
+                if (bucketIndex !== -1) {
+                    // 添加到桶中
+                    buckets[bucketIndex].push(weight);
+                    
+                    // 更新桶的显示
+                    const bucketContentEl = document.getElementById(`bucket-${bucketIndex}`);
+                    const bucketItemEl = document.createElement('div');
+                    bucketItemEl.className = 'data-item bg-indigo-100 text-indigo-800';
+                    bucketItemEl.textContent = weight;
+                    bucketContentEl.appendChild(bucketItemEl);
+                    
+                    // 添加进入动画
+                    bucketItemEl.classList.add('fade-in');
+                }
+                
+                // 移除高亮
+                weightEls[i].classList.remove('highlight');
+            }
+        }
+        
+        // 对桶内数据进行冒泡排序
+        async function sortBuckets() {
+            for (let bucketIndex = 0; bucketIndex < buckets.length; bucketIndex++) {
+                const bucket = buckets[bucketIndex];
+                const bucketContentEl = document.getElementById(`bucket-${bucketIndex}`);
+                const bucketItems = bucketContentEl.querySelectorAll('.data-item');
+                
+                // 冒泡排序
+                for (let i = 0; i < bucket.length - 1; i++) {
+                    for (let j = 0; j < bucket.length - i - 1; j++) {
+                        // 高亮正在比较的两个元素
+                        bucketItems[j].classList.add('highlight');
+                        bucketItems[j + 1].classList.add('highlight');
+                        
+                        // 等待0.5秒
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        if (bucket[j] > bucket[j + 1]) {
+                            // 交换数据
+                            [bucket[j], bucket[j + 1]] = [bucket[j + 1], bucket[j]];
+                            
+                            // 更新显示
+                            bucketItems[j].textContent = bucket[j];
+                            bucketItems[j + 1].textContent = bucket[j + 1];
+                            
+                            // 添加交换动画
+                            bucketItems[j].classList.add('pulse');
+                            bucketItems[j + 1].classList.add('pulse');
+                            
+                            // 等待0.5秒
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            
+                            // 移除脉冲动画
+                            bucketItems[j].classList.remove('pulse');
+                            bucketItems[j + 1].classList.remove('pulse');
+                        }
+                        
+                        // 移除高亮
+                        bucketItems[j].classList.remove('highlight');
+                        bucketItems[j + 1].classList.remove('highlight');
+                    }
+                }
+            }
+        }
+        
+        // 合并桶得到最终结果
+        async function mergeBuckets() {
+            const sortedData = [];
+            
+            for (let bucketIndex = 0; bucketIndex < buckets.length; bucketIndex++) {
+                const bucket = buckets[bucketIndex];
+                const bucketContentEl = document.getElementById(`bucket-${bucketIndex}`);
+                const bucketItems = bucketContentEl.querySelectorAll('.data-item');
+                
+                for (let i = 0; i < bucket.length; i++) {
+                    // 高亮当前数据
+                    bucketItems[i].classList.add('highlight');
+                    
+                    // 等待0.5秒
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // 添加到排序结果
+                    sortedData.push(bucket[i]);
+                    
+                    // 更新排序结果显示
+                    const resultItemEl = document.createElement('div');
+                    resultItemEl.className = 'data-item bg-green-100 text-green-800 fade-in';
+                    resultItemEl.textContent = bucket[i];
+                    sortedResultEl.appendChild(resultItemEl);
+                    
+                    // 移除高亮
+                    bucketItems[i].classList.remove('highlight');
+                }
+            }
+            
+            // 验证排序结果
+            const isSorted = sortedData.every((val, i, arr) => !i || val >= arr[i-1]);
+            if (isSorted) {
+                sortedResultEl.classList.add('pulse');
+                setTimeout(() => sortedResultEl.classList.remove('pulse'), 1500);
+            }
+        }
+        
+        // 更新步骤指示器
+        function updateStepIndicator() {
+            stepIndicators.forEach((indicator, index) => {
+                indicator.className = 'step-indicator bg-gray-200 text-gray-600';
+                if (index === currentStep) {
+                    indicator.className = 'step-indicator step-active';
+                }
+            });
+        }
+        
+        // 下一步按钮点击事件
+        nextBtn.addEventListener('click', async function() {
+            // 禁用按钮防止重复点击
+            nextBtn.disabled = true;
+            
+            switch (currentStep) {
+                case 0: // 初始化 -> 步骤1
+                    calculateBucketRanges();
+                    createBuckets();
+                    currentStep = 1;
+                    updateStepIndicator();
+                    break;
+                    
+                case 1: // 步骤1 -> 步骤2
+                    await distributeData();
+                    currentStep = 2;
+                    updateStepIndicator();
+                    break;
+                    
+                case 2: // 步骤2 -> 步骤3
+                    await sortBuckets();
+                    currentStep = 3;
+                    updateStepIndicator();
+                    break;
+                    
+                case 3: // 步骤3 -> 步骤4
+                    await mergeBuckets();
+                    currentStep = 4;
+                    updateStepIndicator();
+                    
+                    // 隐藏下一步按钮，显示重置按钮
+                    nextBtn.classList.add('hidden');
+                    resetBtn.classList.remove('hidden');
+                    break;
+            }
+            
+            // 启用按钮
+            nextBtn.disabled = false;
+        });
+        
+        // 重置按钮点击事件
+        resetBtn.addEventListener('click', function() {
+            init();
+        });
+        
+        // 初始化页面
+        init();
+    </script>
+</body>
+</html>
