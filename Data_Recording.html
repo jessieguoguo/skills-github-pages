@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实验数据可视化系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .section {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        /* 数据记录区样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .data-table th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .data-table input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .avg-cell {
+            background-color: #e8f4fc;
+            font-weight: bold;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-add {
+            background-color: #2ecc71;
+        }
+        
+        .btn-add:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-delete {
+            background-color: #e74c3c;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        
+        /* 可视化区样式 */
+        .chart-container {
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-controls select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+        }
+        
+        .data-display {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        
+        .data-display table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-display th, .data-display td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .data-display th {
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .default-row {
+            background-color: #f9f9f9;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 数据记录区 -->
+        <div class="section">
+            <h2 class="section-title">数据记录区</h2>
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>桶的数量</th>
+                        <th>运行时间1</th>
+                        <th>运行时间2</th>
+                        <th>运行时间3</th>
+                        <th>平均运行时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 默认行将通过JavaScript生成 -->
+                </tbody>
+            </table>
+            
+            <div class="button-group">
+                <button class="btn-add" id="addRowBtn">增加行</button>
+                <button id="visualizeBtn">可视化</button>
+            </div>
+        </div>
+        
+        <!-- 可视化图表区 -->
+        <div class="section">
+            <h2 class="section-title">可视化图表区</h2>
+            <div class="chart-controls">
+                <select id="chartType">
+                    <option value="line">折线图</option>
+                    <option value="bar">柱状图</option>
+                </select>
+                <button id="updateChartBtn">更新图表</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="chartCanvas"></canvas>
+            </div>
+            <div class="data-display" id="dataDisplay">
+                <!-- 详细数据将通过JavaScript生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化数据表
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加默认行
+            addTableRow('5', true);
+            addTableRow('10', true);
+            addTableRow('15', true);
+            addTableRow('20', true);
+            
+            // 绑定事件
+            document.getElementById('addRowBtn').addEventListener('click', function() {
+                const bucketCount = prompt('请输入桶的数量:');
+                if (bucketCount && !isNaN(bucketCount)) {
+                    addTableRow(bucketCount, false);
+                } else if (bucketCount) {
+                    alert('请输入有效的数字!');
+                }
+            });
+            
+            document.getElementById('visualizeBtn').addEventListener('click', visualizeData);
+            document.getElementById('updateChartBtn').addEventListener('click', visualizeData);
+            
+            // 初始可视化
+            visualizeData();
+        });
+        
+        // 添加表格行
+        function addTableRow(bucketCount, isDefault) {
+            const tableBody = document.querySelector('#dataTable tbody');
+            const newRow = document.createElement('tr');
+            
+            // 如果是默认行，添加特殊类名
+            if (isDefault) {
+                newRow.classList.add('default-row');
+            }
+            
+            newRow.innerHTML = `
+                <td>${bucketCount}</td>
+                <td><input type="number" step="0.01" min="0" placeholder="输入运行时间"></td>
+                <td><input type="number" step="0.01" min="0" placeholder="输入运行时间"></td>
+                <td><input type="number" step="0.01" min="0" placeholder="输入运行时间"></td>
+                <td class="avg-cell">-</td>
+                <td>${isDefault ? '' : '<button class="btn-delete">删除</button>'}</td>
+            `;
+            
+            // 为输入框添加事件监听
+            const inputs = newRow.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    calculateAverage(newRow);
+                });
+            });
+            
+            // 为删除按钮添加事件监听
+            const deleteBtn = newRow.querySelector('.btn-delete');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    newRow.remove();
+                    visualizeData();
+                });
+            }
+            
+            tableBody.appendChild(newRow);
+        }
+        
+        // 计算平均运行时间
+        function calculateAverage(row) {
+            const inputs = row.querySelectorAll('input');
+            let sum = 0;
+            let validCount = 0;
+            
+            inputs.forEach(input => {
+                if (input.value && !isNaN(input.value)) {
+                    sum += parseFloat(input.value);
+                    validCount++;
+                }
+            });
+            
+            const avgCell = row.querySelector('.avg-cell');
+            if (validCount > 0) {
+                const avg = sum / validCount;
+                avgCell.textContent = avg.toFixed(2);
+            } else {
+                avgCell.textContent = '-';
+            }
+        }
+        
+        // 可视化数据
+        function visualizeData() {
+            const tableRows = document.querySelectorAll('#dataTable tbody tr');
+            const data = [];
+            
+            // 收集数据 - 只使用桶的数量和平均运行时间
+            tableRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const bucket = cells[0].textContent;
+                const avg = cells[4].textContent;
+                
+                if (avg !== '-') {
+                    data.push({
+                        bucket: parseInt(bucket),
+                        average: parseFloat(avg)
+                    });
+                }
+            });
+            
+            // 按桶的数量从小到大排序
+            data.sort((a, b) => a.bucket - b.bucket);
+            
+            // 提取排序后的数据
+            const buckets = data.map(item => item.bucket.toString());
+            const averages = data.map(item => item.average);
+            
+            // 更新详细数据表格
+            updateDataDisplay(buckets, averages);
+            
+            // 绘制图表
+            drawChart(buckets, averages);
+        }
+        
+        // 更新详细数据表格
+        function updateDataDisplay(buckets, averages) {
+            const dataDisplay = document.getElementById('dataDisplay');
+            let html = '<h3>详细数据</h3><table><thead><tr><th>桶的数量</th><th>平均运行时间</th></tr></thead><tbody>';
+            
+            for (let i = 0; i < buckets.length; i++) {
+                html += `<tr>
+                    <td>${buckets[i]}</td>
+                    <td>${averages[i].toFixed(2)}</td>
+                </tr>`;
+            }
+            
+            html += '</tbody></table>';
+            dataDisplay.innerHTML = html;
+        }
+        
+        // 绘制图表 - 只使用桶的数量和平均运行时间
+        function drawChart(buckets, averages) {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            const chartType = document.getElementById('chartType').value;
+            
+            // 如果存在现有图表，销毁它
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+            
+            // 如果没有有效数据，显示提示
+            if (averages.length === 0) {
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "#999";
+                ctx.textAlign = "center";
+                ctx.fillText("暂无有效数据，请在左侧输入数据", ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+            
+            // 创建图表 - 只使用平均运行时间
+            window.myChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: buckets,
+                    datasets: [{
+                        label: '平均运行时间',
+                        data: averages,
+                        backgroundColor: chartType === 'bar' ? 
+                            'rgba(54, 162, 235, 0.7)' : 'rgba(54, 162, 235, 0.1)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                        pointBorderColor: '#fff',
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        fill: chartType === 'line'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '平均运行时间'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '桶的数量'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '桶数量与平均运行时间关系图',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `桶数量: ${context.label}, 平均运行时间: ${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
