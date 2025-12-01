@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金币称重游戏 - 找出假金币</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #FFF9C4;
+            color: #5D4037;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #FFD54F, #FFB300);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(255, 152, 0, 0.2);
+            border: 5px solid #FF8F00;
+        }
+        
+        h1 {
+            color: #E65100;
+            font-size: 2.5rem;
+            margin: 10px 0;
+            text-shadow: 2px 2px 0 #FFECB3;
+        }
+        
+        .coins-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #FFF8E1;
+            border-radius: 20px;
+            border: 5px solid #FFB300;
+        }
+        
+        .coin {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #FFD54F, #FFB300);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.4rem;
+            color: #5D4037;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #FF8F00, inset 0 0 10px rgba(255, 255, 255, 0.5);
+            transition: all 0.2s;
+            user-select: none;
+            border: 3px solid #FF8F00;
+        }
+        
+        .coin:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 0 #FF8F00, inset 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+        
+        .coin.selected-left {
+            background: radial-gradient(circle at 30% 30%, #81C784, #4CAF50);
+            box-shadow: 0 6px 0 #2E7D32, inset 0 0 10px rgba(255, 255, 255, 0.5);
+            border-color: #2E7D32;
+        }
+        
+        .coin.selected-right {
+            background: radial-gradient(circle at 30% 30%, #64B5F6, #1976D2);
+            box-shadow: 0 6px 0 #0D47A1, inset 0 0 10px rgba(255, 255, 255, 0.5);
+            border-color: #0D47A1;
+        }
+        
+        .scale-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #FFF8E1;
+            border-radius: 20px;
+            border: 5px solid #FFB300;
+            position: relative;
+        }
+        
+        .scale {
+            position: relative;
+            width: 80%;
+            height: 200px;
+            margin: 30px 0;
+        }
+        
+        .scale-base {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 80px;
+            background-color: #795548;
+            border-radius: 10px;
+            z-index: 2;
+        }
+        
+        .scale-beam {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 15px;
+            background-color: #5D4037;
+            border-radius: 10px;
+            z-index: 1;
+            transition: transform 1s;
+        }
+        
+        .scale-left, .scale-right {
+            position: absolute;
+            top: 0;
+            width: 180px;
+            height: 100px;
+            border-radius: 10px;
+            background-color: #BCAAA4;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            border: 5px solid #8D6E63;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .scale-left {
+            left: calc(50% - 200px);
+        }
+        
+        .scale-right {
+            right: calc(50% - 200px);
+        }
+        
+        .scale-pan-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #5D4037;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-weigh {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-reset {
+            background-color: #FF9800;
+            color: white;
+        }
+        
+        .btn-solve {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .history {
+            background-color: #FFF8E1;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 5px solid #FFB300;
+        }
+        
+        .history h3 {
+            color: #E65100;
+            margin-top: 0;
+        }
+        
+        .history-list {
+            list-style-type: none;
+            padding: 0;
+            text-align: left;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .history-item {
+            padding: 12px;
+            margin: 10px 0;
+            background-color: #FFECB3;
+            border-radius: 10px;
+            border-left: 6px solid #FF9800;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .weighing-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: #FFECB3;
+            padding: 15px;
+            border-radius: 15px;
+            border: 3px solid #FFB300;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .weighing-info h3 {
+            color: #E65100;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .weighing-count {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .count-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .count-label {
+            font-size: 1rem;
+            color: #5D4037;
+            margin-bottom: 5px;
+        }
+        
+        .count-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #F57C00;
+        }
+        
+        /* 自定义弹窗样式 */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: #FFF8E1;
+            padding: 30px;
+            border-radius: 20px;
+            border: 5px solid #FFB300;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalAppear 0.3s ease-out;
+        }
+        
+        @keyframes modalAppear {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal-title {
+            color: #E65100;
+            font-size: 1.8rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .modal-message {
+            font-size: 1.3rem;
+            color: #5D4037;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .modal-success .modal-icon {
+            color: #4CAF50;
+        }
+        
+        .modal-fail .modal-icon {
+            color: #F44336;
+        }
+        
+        .modal-info .modal-icon {
+            color: #2196F3;
+        }
+        
+        .modal-btn {
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            background-color: #FF9800;
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-btn:hover {
+            background-color: #F57C00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .coin {
+                width: 50px;
+                height: 50px;
+                font-size: 1rem;
+            }
+            
+            .scale-left, .scale-right {
+                width: 130px;
+                height: 80px;
+            }
+            
+            .scale-left {
+                left: calc(50% - 150px);
+            }
+            
+            .scale-right {
+                right: calc(50% - 150px);
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 1.1rem;
+            }
+            
+            .weighing-info {
+                position: static;
+                margin-top: 20px;
+                width: 100%;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .modal-title {
+                font-size: 1.5rem;
+            }
+            
+            .modal-message {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-coins"></i> 金币称重游戏 <i class="fas fa-balance-scale"></i></h1>
+            <p>有18枚金币，其中一枚是较轻的假金币。你能在3次称量内找出它吗？</p>
+        </header>
+        
+        <h2><i class="fas fa-coins"></i> 金币 (单击放在天平左边；双击放在天平右边)</h2>
+        <div class="coins-container" id="coins-container">
+            <!-- 金币将通过JavaScript生成 -->
+        </div>
+        
+        <div class="scale-container">
+            <h2><i class="fas fa-balance-scale"></i> 天平</h2>
+            <div class="scale">
+                <div class="scale-base"></div>
+                <div class="scale-beam" id="scale-beam"></div>
+                <div class="scale-left" id="scale-left">
+                    <div class="scale-pan-label">左边</div>
+                </div>
+                <div class="scale-right" id="scale-right">
+                    <div class="scale-pan-label">右边</div>
+                </div>
+            </div>
+            
+            <!-- 称量信息 - 放在天平区域右下角 -->
+            <div class="weighing-info">
+                <h3><i class="fas fa-ruler"></i> 称量信息</h3>
+                <div class="weighing-count">
+                    <div class="count-item">
+                        <div class="count-label">剩余称量次数</div>
+                        <div id="weighings-left" class="count-value">3</div>
+                    </div>
+                    <div class="count-item">
+                        <div class="count-label">当前称量</div>
+                        <div id="current-weigh" class="count-value">1</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-weigh" id="weigh-btn">
+                    <i class="fas fa-weight-hanging"></i> 称量
+                </button>
+                <button class="btn btn-reset" id="reset-btn">
+                    <i class="fas fa-redo"></i> 重置选择
+                </button>
+                <button class="btn btn-solve" id="solve-btn">
+                    <i class="fas fa-search"></i> 找出假币
+                </button>
+            </div>
+        </div>
+        
+        <div class="history">
+            <h3><i class="fas fa-history"></i> 称量历史</h3>
+            <ul class="history-list" id="history-list">
+                <!-- 历史记录将通过JavaScript添加 -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- 自定义弹窗 -->
+    <div id="result-modal" class="custom-modal">
+        <div class="modal-content" id="modal-content">
+            <div class="modal-icon" id="modal-icon"></div>
+            <h2 class="modal-title" id="modal-title">称量结果</h2>
+            <div class="modal-message" id="modal-message"></div>
+            <button class="modal-btn" id="modal-close-btn">确定</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态变量
+        let coins = [];
+        let fakeCoinIndex = -1;
+        let selectedCoins = { left: [], right: [] };
+        let weighingsLeft = 3;
+        let currentWeigh = 1;
+        let gameState = 'weighing'; // 'weighing' 或 'solving'
+        let weighHistory = [];
+        
+        // DOM元素
+        const coinsContainer = document.getElementById('coins-container');
+        const scaleLeft = document.getElementById('scale-left');
+        const scaleRight = document.getElementById('scale-right');
+        const scaleBeam = document.getElementById('scale-beam');
+        const weighBtn = document.getElementById('weigh-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const solveBtn = document.getElementById('solve-btn');
+        const historyList = document.getElementById('history-list');
+        const weighingsLeftSpan = document.getElementById('weighings-left');
+        const currentWeighSpan = document.getElementById('current-weigh');
+        
+        // 弹窗相关元素
+        const resultModal = document.getElementById('result-modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalIcon = document.getElementById('modal-icon');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        
+        // 初始化游戏
+        function initGame() {
+            // 重置状态
+            coins = Array.from({length: 18}, (_, i) => ({
+                id: i + 1,
+                isFake: false,
+                selected: 'none' // 'none', 'left', 'right'
+            }));
+            
+            // 随机选择一枚假币
+            fakeCoinIndex = Math.floor(Math.random() * 18);
+            coins[fakeCoinIndex].isFake = true;
+            
+            // 重置其他状态
+            selectedCoins = { left: [], right: [] };
+            weighingsLeft = 3;
+            currentWeigh = 1;
+            gameState = 'weighing';
+            weighHistory = [];
+            
+            // 更新UI
+            updateCoinsDisplay();
+            updateScaleDisplay();
+            updateGameInfo();
+            clearHistory();
+            
+            // 重置按钮状态
+            weighBtn.disabled = false;
+            solveBtn.style.display = 'none';
+        }
+        
+        // 更新金币显示
+        function updateCoinsDisplay() {
+            coinsContainer.innerHTML = '';
+            
+            coins.forEach(coin => {
+                const coinElement = document.createElement('div');
+                coinElement.className = 'coin';
+                if (coin.selected === 'left') {
+                    coinElement.classList.add('selected-left');
+                } else if (coin.selected === 'right') {
+                    coinElement.classList.add('selected-right');
+                }
+                
+                coinElement.textContent = coin.id;
+                coinElement.dataset.id = coin.id;
+                
+                // 添加点击事件监听
+                coinElement.addEventListener('click', (e) => {
+                    // 单击事件 - 放在左边
+                    handleCoinClick(coin.id, 'left');
+                });
+                
+                coinElement.addEventListener('dblclick', (e) => {
+                    // 双击事件 - 放在右边
+                    e.preventDefault();
+                    handleCoinClick(coin.id, 'right');
+                });
+                
+                coinsContainer.appendChild(coinElement);
+            });
+        }
+        
+        // 处理金币点击
+        function handleCoinClick(coinId, side) {
+            if (gameState === 'solving') {
+                // 在解决阶段，点击金币是猜测假币
+                checkGuess(coinId);
+                return;
+            }
+            
+            const coinIndex = coins.findIndex(c => c.id === coinId);
+            const coin = coins[coinIndex];
+            
+            // 如果金币已经在另一边，先移除
+            if (coin.selected === 'left' && side === 'right') {
+                selectedCoins.left = selectedCoins.left.filter(id => id !== coinId);
+            } else if (coin.selected === 'right' && side === 'left') {
+                selectedCoins.right = selectedCoins.right.filter(id => id !== coinId);
+            }
+            
+            // 如果金币已经在所选的一边，则取消选择
+            if (coin.selected === side) {
+                coin.selected = 'none';
+                if (side === 'left') {
+                    selectedCoins.left = selectedCoins.left.filter(id => id !== coinId);
+                } else if (side === 'right') {
+                    selectedCoins.right = selectedCoins.right.filter(id => id !== coinId);
+                }
+            } else {
+                // 否则选择到指定的一边
+                coin.selected = side;
+                if (side === 'left') {
+                    selectedCoins.left.push(coinId);
+                } else if (side === 'right') {
+                    selectedCoins.right.push(coinId);
+                }
+            }
+            
+            updateCoinsDisplay();
+            updateScaleDisplay();
+        }
+        
+        // 更新天平显示
+        function updateScaleDisplay() {
+            // 清空天平
+            scaleLeft.innerHTML = '<div class="scale-pan-label">左边</div>';
+            scaleRight.innerHTML = '<div class="scale-pan-label">右边</div>';
+            
+            // 添加左边金币
+            selectedCoins.left.forEach(coinId => {
+                const coinElement = document.createElement('div');
+                coinElement.className = 'coin selected-left';
+                coinElement.textContent = coinId;
+                coinElement.style.width = '40px';
+                coinElement.style.height = '40px';
+                coinElement.style.fontSize = '1rem';
+                coinElement.style.margin = '2px';
+                coinElement.style.cursor = 'default';
+                scaleLeft.appendChild(coinElement);
+            });
+            
+            // 添加右边金币
+            selectedCoins.right.forEach(coinId => {
+                const coinElement = document.createElement('div');
+                coinElement.className = 'coin selected-right';
+                coinElement.textContent = coinId;
+                coinElement.style.width = '40px';
+                coinElement.style.height = '40px';
+                coinElement.style.fontSize = '1rem';
+                coinElement.style.margin = '2px';
+                coinElement.style.cursor = 'default';
+                scaleRight.appendChild(coinElement);
+            });
+            
+            // 重置天平平衡
+            scaleBeam.style.transform = 'translateX(-50%) rotate(0deg)';
+        }
+        
+        // 更新游戏信息显示
+        function updateGameInfo() {
+            weighingsLeftSpan.textContent = weighingsLeft;
+            currentWeighSpan.textContent = currentWeigh;
+        }
+        
+        // 清空历史
+        function clearHistory() {
+            historyList.innerHTML = '';
+        }
+        
+        // 执行称量
+        function performWeighing() {
+            if (selectedCoins.left.length === 0 && selectedCoins.right.length === 0) {
+                showModal('warning', '提示', '请在天平两边放置一些金币再称量！');
+                return;
+            }
+            
+            if (weighingsLeft <= 0) {
+                showModal('info', '提示', '你已经用完三次称量机会了！现在点击"找出假币"按钮，然后点击你认为的假金币。');
+                return;
+            }
+            
+            // 计算两边是否有假币
+            const leftHasFake = selectedCoins.left.some(id => coins.find(c => c.id === id).isFake);
+            const rightHasFake = selectedCoins.right.some(id => coins.find(c => c.id === id).isFake);
+            
+            let resultText = '';
+            let modalType = 'info';
+            
+            if (leftHasFake) {
+                // 左边有假币，左边较轻
+                scaleBeam.style.transform = 'translateX(-50%) rotate(-2deg)';
+                resultText = `第${currentWeigh}次称量结果：<span style="color:#4CAF50; font-weight:bold;">左边较轻</span>，假金币在左边。`;
+                modalType = 'success';
+            } else if (rightHasFake) {
+                // 右边有假币，右边较轻
+                scaleBeam.style.transform = 'translateX(-50%) rotate(2deg)';
+                resultText = `第${currentWeigh}次称量结果：<span style="color:#2196F3; font-weight:bold;">右边较轻</span>，假金币在右边。`;
+                modalType = 'success';
+            } else {
+                // 两边都没有假币，天平平衡
+                scaleBeam.style.transform = 'translateX(-50%) rotate(0deg)';
+                resultText = `第${currentWeigh}次称量结果：<span style="color:#9C27B0; font-weight:bold;">天平平衡</span>，假金币不在天平上。`;
+                modalType = 'info';
+            }
+            
+            // 显示弹窗结果
+            showModal(modalType, `第${currentWeigh}次称量结果`, resultText);
+            
+            // 记录历史
+            const leftCoinsText = selectedCoins.left.length > 0 ? selectedCoins.left.join(', ') : '无';
+            const rightCoinsText = selectedCoins.right.length > 0 ? selectedCoins.right.join(', ') : '无';
+            const historyItem = document.createElement('li');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+                <strong>第${currentWeigh}次称量</strong><br>
+                左边金币: ${leftCoinsText}<br>
+                右边金币: ${rightCoinsText}<br>
+                结果: ${leftHasFake ? '左边较轻' : rightHasFake ? '右边较轻' : '天平平衡'}
+            `;
+            historyList.appendChild(historyItem);
+            
+            // 更新游戏状态
+            weighingsLeft--;
+            currentWeigh++;
+            
+            // 如果称量次数用完，进入解决阶段
+            if (weighingsLeft <= 0) {
+                gameState = 'solving';
+                showModal('info', '提示', '三次称量已完成！现在点击"找出假币"按钮，然后点击你认为的假金币。');
+                solveBtn.style.display = 'inline-flex';
+                weighBtn.disabled = true;
+            }
+            
+            // 重置选择
+            resetSelections();
+            updateGameInfo();
+        }
+        
+        // 重置选择
+        function resetSelections() {
+            coins.forEach(coin => {
+                coin.selected = 'none';
+            });
+            selectedCoins = { left: [], right: [] };
+            updateCoinsDisplay();
+            updateScaleDisplay();
+        }
+        
+        // 显示弹窗
+        function showModal(type, title, message) {
+            // 设置弹窗类型
+            modalContent.className = 'modal-content';
+            modalContent.classList.add(`modal-${type}`);
+            
+            // 设置图标
+            if (type === 'success') {
+                modalIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            } else if (type === 'warning' || type === 'fail') {
+                modalIcon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+            } else {
+                modalIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+            }
+            
+            // 设置标题和消息
+            modalTitle.textContent = title;
+            modalMessage.innerHTML = message;
+            
+            // 显示弹窗
+            resultModal.style.display = 'flex';
+        }
+        
+        // 检查猜测
+        function checkGuess(coinId) {
+            const coinIndex = coins.findIndex(c => c.id === coinId);
+            const coin = coins[coinIndex];
+            
+            if (coin.isFake) {
+                showModal('success', '恭喜！', `你找到了假金币！它是第${coinId}号金币。<br>你成功在三次称量内找到了假金币！`);
+                
+                // 高亮显示假币
+                coins.forEach(c => {
+                    if (c.isFake) {
+                        const coinElement = document.querySelector(`.coin[data-id="${c.id}"]`);
+                        coinElement.style.background = 'radial-gradient(circle at 30% 30%, #FF5722, #D84315)';
+                        coinElement.style.borderColor = '#BF360C';
+                        coinElement.style.boxShadow = '0 6px 0 #BF360C, inset 0 0 10px rgba(255, 255, 255, 0.5)';
+                    }
+                });
+            } else {
+                showModal('fail', '不对！', `第${coinId}号金币不是假金币。<br>假金币是第${coins[fakeCoinIndex].id}号。再试一次吧！`);
+            }
+        }
+        
+        // 关闭弹窗
+        function closeModal() {
+            resultModal.style.display = 'none';
+        }
+        
+        // 事件监听
+        weighBtn.addEventListener('click', performWeighing);
+        resetBtn.addEventListener('click', resetSelections);
+        solveBtn.addEventListener('click', () => {
+            if (weighingsLeft <= 0) {
+                gameState = 'solving';
+                showModal('info', '提示', '现在点击你认为的假金币！');
+                updateCoinsDisplay();
+            }
+        });
+        
+        // 弹窗关闭按钮事件
+        modalCloseBtn.addEventListener('click', closeModal);
+        
+        // 点击弹窗背景关闭弹窗
+        resultModal.addEventListener('click', (e) => {
+            if (e.target === resultModal) {
+                closeModal();
+            }
+        });
+        
+        // 初始化游戏
+        initGame();
+        
+        // 添加键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (gameState === 'weighing') {
+                    performWeighing();
+                }
+            } else if (e.key === 'r' || e.key === 'R') {
+                resetSelections();
+            } else if (e.key === 'n' || e.key === 'N') {
+                initGame();
+            } else if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

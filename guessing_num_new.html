@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜数字游戏 - 寻找幸运数字</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            color: #5a67d8;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f7fafc;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .info-label {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            grid-gap: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .number-btn {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #e2e8f0, #cbd5e0);
+            color: #4a5568;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .number-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .number-btn:active {
+            transform: translateY(0);
+        }
+        
+        .number-btn.disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .number-btn.correct {
+            background: linear-gradient(145deg, #48bb78, #38a169);
+            color: white;
+        }
+        
+        .hint-box {
+            background-color: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .hint-title {
+            color: #2b6cb0;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .hint-text {
+            color: #2c5282;
+        }
+        
+        .restart-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 12px 30px;
+            background: linear-gradient(145deg, #5a67d8, #4c51bf);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(90, 103, 216, 0.3);
+        }
+        
+        .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(90, 103, 216, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .buttons-grid {
+                grid-template-columns: repeat(10, 1fr);
+            }
+            
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>猜数字游戏</h1>
+        <p class="subtitle">找到隐藏的幸运数字！尝试使用二分查找策略。</p>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">当前范围</div>
+                <div class="info-value" id="current-range">1-100</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">尝试次数</div>
+                <div class="info-value" id="attempts">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">剩余数字</div>
+                <div class="info-value" id="remaining">100</div>
+            </div>
+        </div>
+        
+        <div class="buttons-grid" id="buttons-container">
+            <!-- 按钮将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="hint-box" id="hint-box">
+            <div class="hint-title">提示</div>
+            <div class="hint-text" id="hint-text">下次尝试选择中间值可以更快找到答案！</div>
+        </div>
+        
+        <button class="restart-btn" id="restart-btn">重新开始游戏</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const LUCKY_NUMBER = 59;
+            const buttonsContainer = document.getElementById('buttons-container');
+            const currentRangeEl = document.getElementById('current-range');
+            const attemptsEl = document.getElementById('attempts');
+            const remainingEl = document.getElementById('remaining');
+            const hintBox = document.getElementById('hint-box');
+            const hintText = document.getElementById('hint-text');
+            const restartBtn = document.getElementById('restart-btn');
+            
+            let currentRange = { min: 1, max: 100 };
+            let attempts = 0;
+            let remainingNumbers = 100;
+            
+            // 创建数字按钮
+            function createButtons() {
+                buttonsContainer.innerHTML = '';
+                for (let i = 1; i <= 100; i++) {
+                    const button = document.createElement('button');
+                    button.className = 'number-btn';
+                    button.textContent = i;
+                    button.dataset.number = i;
+                    
+                    button.addEventListener('click', function() {
+                        handleGuess(parseInt(this.dataset.number));
+                    });
+                    
+                    buttonsContainer.appendChild(button);
+                }
+            }
+            
+            // 处理猜测
+            function handleGuess(guess) {
+                attempts++;
+                attemptsEl.textContent = attempts;
+                
+                // 禁用已点击的按钮
+                const clickedButton = document.querySelector(`.number-btn[data-number="${guess}"]`);
+                clickedButton.disabled = true;
+                
+                if (guess === LUCKY_NUMBER) {
+                    // 猜对了
+                    clickedButton.classList.add('correct');
+                    showAlert('恭喜！你找到了幸运数字59！');
+                    disableAllButtons();
+                    hintBox.style.display = 'none';
+                } else if (guess < LUCKY_NUMBER) {
+                    // 猜小了
+                    showAlert(`猜小了！${guess} 小于幸运数字`);
+                    
+                    // 更新范围并禁用不在范围内的按钮
+                    const oldMin = currentRange.min;
+                    currentRange.min = guess + 1;
+                    
+                    // 修复：禁用所有不在当前范围内的按钮
+                    disableButtonsOutsideRange();
+                    
+                    // 检查是否选择了中间值
+                    checkMiddleValue(guess, oldMin, currentRange.max);
+                } else {
+                    // 猜大了
+                    showAlert(`猜大了！${guess} 大于幸运数字`);
+                    
+                    // 更新范围并禁用不在范围内的按钮
+                    const oldMax = currentRange.max;
+                    currentRange.max = guess - 1;
+                    
+                    // 修复：禁用所有不在当前范围内的按钮
+                    disableButtonsOutsideRange();
+                    
+                    // 检查是否选择了中间值
+                    checkMiddleValue(guess, currentRange.min, oldMax);
+                }
+                
+                // 更新UI
+                currentRangeEl.textContent = `${currentRange.min}-${currentRange.max}`;
+                remainingNumbers = currentRange.max - currentRange.min + 1;
+                remainingEl.textContent = remainingNumbers;
+                
+                // 如果范围缩小到0，说明用户错过了幸运数字
+                if (currentRange.min > currentRange.max) {
+                    showAlert('游戏结束！你错过了幸运数字59。');
+                    disableAllButtons();
+                }
+            }
+            
+            // 新函数：禁用所有不在当前范围内的按钮
+            function disableButtonsOutsideRange() {
+                const buttons = document.querySelectorAll('.number-btn');
+                buttons.forEach(button => {
+                    const number = parseInt(button.dataset.number);
+                    if (number < currentRange.min || number > currentRange.max) {
+                        button.disabled = true;
+                        button.classList.add('disabled');
+                    }
+                });
+            }
+            
+            // 禁用所有按钮
+            function disableAllButtons() {
+                const buttons = document.querySelectorAll('.number-btn');
+                buttons.forEach(button => {
+                    button.disabled = true;
+                    if (!button.classList.contains('correct')) {
+                        button.classList.add('disabled');
+                    }
+                });
+            }
+            
+            // 检查是否选择了中间值
+            function checkMiddleValue(guess, min, max) {
+                const mid1 = Math.floor((min + max) / 2);
+                const mid2 = Math.ceil((min + max) / 2);
+                
+                if (guess !== mid1 && guess !== mid2) {
+                    hintText.textContent = `下次尝试选择中间值可以更快找到答案！`;
+                    hintBox.style.display = 'block';
+                } else {
+                    hintBox.style.display = 'none';
+                }
+            }
+            
+            // 显示提示弹窗
+            function showAlert(message) {
+                // 使用浏览器原生alert，实际项目中可替换为更美观的模态框
+                alert(message);
+            }
+            
+            // 重新开始游戏
+            function restartGame() {
+                currentRange = { min: 1, max: 100 };
+                attempts = 0;
+                remainingNumbers = 100;
+                
+                currentRangeEl.textContent = '1-100';
+                attemptsEl.textContent = '0';
+                remainingEl.textContent = '100';
+                hintBox.style.display = 'none';
+                
+                createButtons();
+            }
+            
+            // 初始化游戏
+            restartBtn.addEventListener('click', restartGame);
+            createButtons();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互传密信有诀窍</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #e0e0e0;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+        
+        h2 {
+            color: #2575fc;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .level {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .question {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            border-left: 4px solid #2575fc;
+        }
+        
+        input, textarea {
+            padding: 10px;
+            margin: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 80px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #2575fc, #6a11cb);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .grid-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.3s;
+        }
+        
+        .grid-item.highlight {
+            background-color: #ffeb3b;
+        }
+        
+        .rule {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .rule select, .rule input {
+            margin: 0 5px;
+            padding: 8px;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .instructions {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .example {
+            background-color: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .final-cipher {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+        .cipher-text {
+            font-weight: bold;
+            color: #2575fc;
+        }
+        
+        .key-input {
+            width: 60px;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        
+        .input-group label {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>互传密信有诀窍</h1>
+    <div class="subtitle">探索古典密码学的奥秘</div>
+    
+    <div class="container">
+        <div id="level1" class="level">
+            <h2>第一关：凯撒密码</h2>
+            
+            <div class="instructions">
+                <p><strong>凯撒密码原理：</strong> 将明文中的每个字母按照字母表顺序向右移动固定位数生成密文。</p>
+                <p>例如：字母A向右移动3位变成D，B变成E，以此类推。</p>
+            </div>
+            
+            <div class="question">
+                <p>1. 加密：将明文 "HELLO WORLD" 使用凯撒密码（向右移动3位）进行加密</p>
+                <p>密文：<input type="text" id="encryptAnswer" placeholder="请输入加密结果"></p>
+                <button onclick="checkEncrypt()">验证答案</button>
+                <div id="encryptResult" class="result"></div>
+            </div>
+            
+            <div class="question">
+                <p>2. 解密：将密文 "JRRG MRE" 使用凯撒密码（向左移动3位）进行解密</p>
+                <p>明文：<input type="text" id="decryptAnswer" placeholder="请输入解密结果"></p>
+                <button onclick="checkDecrypt()">验证答案</button>
+                <div id="decryptResult" class="result"></div>
+            </div>
+            
+            <div class="question">
+                <p>3. 自行设计：输入一段明文，自定义密钥（1-25）进行凯撒密码加密</p>
+                <div class="input-group">
+                    <label>明文：</label>
+                    <input type="text" id="customPlaintext" placeholder="请输入明文（仅字母）">
+                </div>
+                <div class="input-group">
+                    <label>密钥（1-25）：</label>
+                    <input type="number" id="customKey" class="key-input" min="1" max="25" value="3">
+                </div>
+                <div class="input-group">
+                    <label>密文：</label>
+                    <input type="text" id="customVerify" placeholder="请输入您计算的密文">
+                </div>
+                <button onclick="checkCustom()">验证</button>
+                <div id="customResult" class="result"></div>
+            </div>
+            
+            <div class="nav">
+                <div></div>
+                <button onclick="showLevel(2)">进入第二关</button>
+            </div>
+        </div>
+        
+        <div id="level2" class="level hidden">
+            <h2>第二关：中文密信</h2>
+            
+            <div class="instructions">
+                <p><strong>加密方法：</strong> 将明文放入4行5列的方格中，然后按照指定的规则对行或列进行移位操作。</p>
+                <p>请输入一首诗（将自动提取前20个汉字）：</p>
+                <textarea id="poemInput" placeholder="例如：床前明月光，疑是地上霜。举头望明月，低头思故乡。或：人闲桂花落，夜静春山空。月出惊山鸟，时鸣春涧中。">床前明月光，疑是地上霜。举头望明月，低头思故乡。</textarea>
+                <button onclick="initGrid()">生成方格</button>
+            </div>
+            
+            <div class="example">
+                <p>原始方格（4行5列）：</p>
+                <div class="grid" id="originalGrid"></div>
+            </div>
+            
+            <div>
+                <h3>设置移位规则（最多3条）：</h3>
+                <div id="rules">
+                    <div class="rule">
+                        <span>规则1：第</span>
+                        <select id="rule1Index">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        <select id="rule1Type" onchange="updateDirectionOptions(1)">
+                            <option value="row">行</option>
+                            <option value="col">列</option>
+                        </select>
+                        <select id="rule1Dir">
+                            <option value="left">左移</option>
+                            <option value="right">右移</option>
+                        </select>
+                        <input type="number" id="rule1Steps" min="1" max="3" value="1">
+                        <span>位</span>
+                    </div>
+                </div>
+                <button onclick="addRule()">添加规则</button>
+                <button onclick="removeRule()">移除规则</button>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="applyRules()">应用规则生成密文</button>
+            </div>
+            
+            <div class="example">
+                <p>加密后方格：</p>
+                <div class="grid" id="encryptedGrid"></div>
+            </div>
+            
+            <div class="final-cipher">
+                <p>最终密文：<span id="finalCipher" class="cipher-text"></span></p>
+            </div>
+            
+            <div class="nav">
+                <button onclick="showLevel(1)">返回第一关</button>
+                <div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 第一关：凯撒密码
+        function caesarEncrypt(text, shift) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                if (char.match(/[A-Z]/i)) {
+                    let code = text.charCodeAt(i);
+                    // 大写字母
+                    if (code >= 65 && code <= 90) {
+                        char = String.fromCharCode(((code - 65 + shift) % 26) + 65);
+                    }
+                    // 小写字母
+                    else if (code >= 97 && code <= 122) {
+                        char = String.fromCharCode(((code - 97 + shift) % 26) + 97);
+                    }
+                }
+                result += char;
+            }
+            return result;
+        }
+        
+        function caesarDecrypt(text, shift) {
+            return caesarEncrypt(text, 26 - (shift % 26));
+        }
+        
+        function checkEncrypt() {
+            const answer = document.getElementById('encryptAnswer').value.trim().toUpperCase();
+            const correct = caesarEncrypt('HELLO WORLD', 3);
+            const resultDiv = document.getElementById('encryptResult');
+            
+            if (answer === correct) {
+                resultDiv.textContent = '正确！';
+                resultDiv.className = 'result success';
+            } else {
+                resultDiv.textContent = '错误！请再试一次';
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        function checkDecrypt() {
+            const answer = document.getElementById('decryptAnswer').value.trim().toUpperCase();
+            const correct = caesarDecrypt('JRRG MRE', 3); // JRRG MRE 是 GOOD JOB 向右移动3位的结果
+            const resultDiv = document.getElementById('decryptResult');
+            
+            if (answer === correct) {
+                resultDiv.textContent = '正确！';
+                resultDiv.className = 'result success';
+            } else {
+                resultDiv.textContent = '错误！请再试一次';
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        function checkCustom() {
+            const userAnswer = document.getElementById('customVerify').value.trim().toUpperCase();
+            const plaintext = document.getElementById('customPlaintext').value.toUpperCase();
+            const key = parseInt(document.getElementById('customKey').value);
+            const correct = caesarEncrypt(plaintext, key);
+            const resultDiv = document.getElementById('customResult');
+            
+            if (userAnswer === correct) {
+                resultDiv.textContent = '正确！';
+                resultDiv.className = 'result success';
+            } else {
+                resultDiv.textContent = '错误！请再试一次';
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        // 第二关：中文密信
+        let currentPoem = "床前明月光疑是地上霜举头望明月低头思故乡";
+        
+        // 从文本中提取汉字
+        function extractChineseCharacters(text) {
+            // 匹配所有汉字（包括扩展区）
+            const chineseRegex = /[\u4e00-\u9fa5\u3400-\u4dbf\uf900-\ufaff]/g;
+            const matches = text.match(chineseRegex);
+            return matches ? matches.join('') : '';
+        }
+        
+        // 初始化原始网格
+        function initGrid() {
+            const poemInput = document.getElementById('poemInput').value;
+            const chineseChars = extractChineseCharacters(poemInput);
+            
+            if (chineseChars.length < 20) {
+                alert(`请输入至少20个汉字！当前提取到${chineseChars.length}个汉字。`);
+                return;
+            }
+            
+            // 只取前20个汉字
+            currentPoem = chineseChars.substring(0, 20);
+            const grid = document.getElementById('originalGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 20; i++) {
+                const item = document.createElement('div');
+                item.className = 'grid-item';
+                item.textContent = currentPoem[i];
+                grid.appendChild(item);
+            }
+            
+            // 同时初始化加密网格
+            initEncryptedGrid();
+        }
+        
+        // 显示关卡
+        function showLevel(level) {
+            document.getElementById('level1').classList.toggle('hidden', level !== 1);
+            document.getElementById('level2').classList.toggle('hidden', level !== 2);
+            
+            if (level === 2) {
+                initGrid();
+            }
+        }
+        
+        // 初始化加密网格
+        function initEncryptedGrid() {
+            const grid = document.getElementById('encryptedGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 20; i++) {
+                const item = document.createElement('div');
+                item.className = 'grid-item';
+                item.textContent = currentPoem[i];
+                grid.appendChild(item);
+            }
+        }
+        
+        let ruleCount = 1;
+        
+        // 更新方向选项
+        function updateDirectionOptions(ruleNum) {
+            const type = document.getElementById(`rule${ruleNum}Type`).value;
+            const dirSelect = document.getElementById(`rule${ruleNum}Dir`);
+            
+            // 清空当前选项
+            dirSelect.innerHTML = '';
+            
+            // 根据类型添加选项
+            if (type === 'row') {
+                dirSelect.innerHTML = `
+                    <option value="left">左移</option>
+                    <option value="right">右移</option>
+                `;
+            } else {
+                dirSelect.innerHTML = `
+                    <option value="up">上移</option>
+                    <option value="down">下移</option>
+                `;
+            }
+        }
+        
+        // 添加规则
+        function addRule() {
+            if (ruleCount >= 3) return;
+            
+            ruleCount++;
+            const rulesDiv = document.getElementById('rules');
+            
+            const newRule = document.createElement('div');
+            newRule.className = 'rule';
+            newRule.innerHTML = `
+                <span>规则${ruleCount}：第</span>
+                <select id="rule${ruleCount}Index">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+                <select id="rule${ruleCount}Type" onchange="updateDirectionOptions(${ruleCount})">
+                    <option value="row">行</option>
+                    <option value="col">列</option>
+                </select>
+                <select id="rule${ruleCount}Dir">
+                    <option value="left">左移</option>
+                    <option value="right">右移</option>
+                </select>
+                <input type="number" id="rule${ruleCount}Steps" min="1" max="3" value="1">
+                <span>位</span>
+            `;
+            
+            rulesDiv.appendChild(newRule);
+        }
+        
+        // 移除规则
+        function removeRule() {
+            if (ruleCount <= 1) return;
+            
+            const rulesDiv = document.getElementById('rules');
+            rulesDiv.removeChild(rulesDiv.lastChild);
+            ruleCount--;
+        }
+        
+        // 应用规则
+        function applyRules() {
+            // 创建网格数组
+            let grid = [];
+            for (let i = 0; i < 4; i++) {
+                grid[i] = [];
+                for (let j = 0; j < 5; j++) {
+                    grid[i][j] = currentPoem[i * 5 + j];
+                }
+            }
+            
+            // 重置高亮
+            const encryptedGrid = document.getElementById('encryptedGrid');
+            const items = encryptedGrid.querySelectorAll('.grid-item');
+            items.forEach(item => item.classList.remove('highlight'));
+            
+            // 应用每条规则
+            for (let r = 1; r <= ruleCount; r++) {
+                const type = document.getElementById(`rule${r}Type`).value;
+                const index = parseInt(document.getElementById(`rule${r}Index`).value) - 1;
+                const dir = document.getElementById(`rule${r}Dir`).value;
+                const steps = parseInt(document.getElementById(`rule${r}Steps`).value);
+                
+                // 高亮受影响的方格
+                highlightAffectedCells(type, index, dir, steps);
+                
+                if (type === 'col') {
+                    // 列移位
+                    let column = [];
+                    for (let i = 0; i < 4; i++) {
+                        column.push(grid[i][index]);
+                    }
+                    
+                    // 移位
+                    if (dir === 'down') {
+                        for (let s = 0; s < steps; s++) {
+                            column.unshift(column.pop());
+                        }
+                    } else if (dir === 'up') {
+                        for (let s = 0; s < steps; s++) {
+                            column.push(column.shift());
+                        }
+                    }
+                    
+                    // 放回列
+                    for (let i = 0; i < 4; i++) {
+                        grid[i][index] = column[i];
+                    }
+                } else {
+                    // 行移位
+                    let row = [...grid[index]];
+                    
+                    // 移位
+                    if (dir === 'right') {
+                        for (let s = 0; s < steps; s++) {
+                            row.unshift(row.pop());
+                        }
+                    } else if (dir === 'left') {
+                        for (let s = 0; s < steps; s++) {
+                            row.push(row.shift());
+                        }
+                    }
+                    
+                    // 放回行
+                    grid[index] = row;
+                }
+            }
+            
+            // 更新加密网格显示
+            encryptedGrid.innerHTML = '';
+            
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const item = document.createElement('div');
+                    item.className = 'grid-item';
+                    item.textContent = grid[i][j];
+                    encryptedGrid.appendChild(item);
+                }
+            }
+            
+            // 显示最终密文
+            let finalCipher = '';
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 5; j++) {
+                    finalCipher += grid[i][j];
+                }
+                if (i < 3) finalCipher += '，';
+            }
+            document.getElementById('finalCipher').textContent = finalCipher;
+        }
+        
+        // 高亮受影响的方格
+        function highlightAffectedCells(type, index, dir, steps) {
+            const encryptedGrid = document.getElementById('encryptedGrid');
+            const items = encryptedGrid.querySelectorAll('.grid-item');
+            
+            if (type === 'col') {
+                // 列移位
+                for (let i = 0; i < 4; i++) {
+                    const itemIndex = i * 5 + index;
+                    items[itemIndex].classList.add('highlight');
+                }
+            } else {
+                // 行移位
+                for (let j = 0; j < 5; j++) {
+                    const itemIndex = index * 5 + j;
+                    items[itemIndex].classList.add('highlight');
+                }
+            }
+        }
+        
+        // 初始化
+        window.onload = function() {
+            initGrid();
+        };
+    </script>
+</body>
+</html>
