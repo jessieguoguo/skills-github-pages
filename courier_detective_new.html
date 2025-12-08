@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快递侦探 - 二分法找时间</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4361ee',
+                        secondary: '#ff7b00',
+                        success: '#38b000',
+                        danger: '#d90429',
+                        light: '#f8f9fa',
+                        dark: '#212529'
+                    },
+                    fontFamily: {
+                        sans: ['Comic Sans MS', 'Arial', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            .border-dashed-custom {
+                border-style: dashed;
+                border-width: 3px;
+            }
+
+            .shelf-item {
+                transition: all 0.3s ease;
+            }
+            .shelf-item:hover {
+                transform: scale(1.05);
+            }
+            .mystery-box {
+                animation: glow 2s infinite alternate;
+            }
+            @keyframes glow {
+                from {
+                    box-shadow: 0 0 5px #ffd700;
+                }
+                to {
+                    box-shadow: 0 0 20px #ffd700, 0 0 30px #ffd700;
+                }
+            }
+            .thief {
+                animation: run 3s infinite;
+            }
+            @keyframes run {
+                0% {
+                    transform: translateX(0) scaleX(1);
+                }
+                45% {
+                    transform: translateX(200px) scaleX(1);
+                }
+                50% {
+                    transform: translateX(200px) scaleX(-1);
+                }
+                95% {
+                    transform: translateX(0) scaleX(-1);
+                }
+                100% {
+                    transform: translateX(0) scaleX(1);
+                }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-blue-100 to-purple-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 标题区域 -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-primary mb-2 text-shadow">
+                <i class="fa fa-search mr-2"></i>快递侦探
+            </h1>
+            <p class="text-xl text-gray-600">用二分法找出谁偷了快递！</p>
+        </header>
+
+        <!-- 关卡信息 -->
+        <div class="bg-primary text-white rounded-xl p-4 mb-6 text-center">
+            <h2 class="text-2xl font-bold">
+                <i class="fa fa-map-signs mr-2"></i>第<span id="currentLevel">1</span>关
+            </h2>
+            <p>时间范围：6:00 - 22:00（注意：第1关目标时间为19:40）</p>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 transform transition-all hover:shadow-xl">
+            <!-- 故事介绍 -->
+            <div class="mb-6 bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                <h2 class="text-2xl font-bold text-primary mb-2">
+                    <i class="fa fa-exclamation-circle mr-2"></i>案件情况
+                </h2>
+                <p class="text-gray-700">
+                    在早上6时到晚上22时之间，快递员放在小区货架上的一箱货物被人错拿了！
+                    我们有监控摄像头的截图，需要通过查看不同时间点的监控，
+                    找出那个偷拿快递的人！
+                </p>
+            </div>
+
+            <!-- 时间选择区域 -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-secondary mb-4">
+                    <i class="fa fa-clock-o mr-2"></i>选择查看时间
+                </h2>
+                
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <!-- 小时选择 -->
+                    <div class="flex-1">
+                        <label for="hour" class="block text-sm font-medium text-gray-700 mb-1">小时</label>
+                        <div class="relative">
+                            <select id="hour" class="block w-full p-3 border-2 border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
+                                <i class="fa fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-2xl font-bold">:</div>
+                    
+                    <!-- 分钟选择 -->
+                    <div class="flex-1">
+                        <label for="minute" class="block text-sm font-medium text-gray-700 mb-1">分钟</label>
+                        <div class="relative">
+                            <select id="minute" class="block w-full p-3 border-2 border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary appearance-none">
+                                <option value="0">00</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="40">40</option>
+                                <option value="50">50</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
+                                <i class="fa fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 查看按钮 -->
+                    <div class="flex-shrink-0">
+                        <button id="checkBtn" class="bg-secondary hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50">
+                            <i class="fa fa-eye mr-2"></i>查看监控
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 监控画面区域 -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-secondary mb-4">
+                    <i class="fa fa-video-camera mr-2"></i>监控画面
+                </h2>
+                
+                <div class="relative bg-gray-900 rounded-xl overflow-hidden shadow-xl border-4 border-gray-700">
+                    <!-- 监控时间显示 -->
+                    <div class="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-lg font-mono">
+                        <span id="displayTime">6:00</span>
+                    </div>
+                    
+                    <!-- 监控画面 -->
+                    <div id="monitorScreen" class="w-full h-64 md:h-80 bg-gray-800 flex items-center justify-center">
+                        <!-- 初始提示 -->
+                        <div id="initialMessage" class="text-white text-center">
+                            <i class="fa fa-film text-4xl mb-2"></i>
+                            <p>请选择时间并点击"查看监控"按钮</p>
+                        </div>
+                        
+                        <!-- 监控图像容器 -->
+                        <div id="monitorImage" class="w-full h-full hidden">
+                            <!-- 图片将通过JavaScript动态设置 -->
+                        </div>
+                        
+                        <!-- 找到小偷时的覆盖层 -->
+                        <div id="thiefFound" class="absolute inset-0 bg-danger bg-opacity-70 flex flex-col items-center justify-center hidden">
+                            <div class="text-white text-center">
+                                <i class="fa fa-exclamation-triangle text-5xl mb-4 animate-bounce-slow"></i>
+                                <h3 class="text-3xl font-bold mb-2">找到小偷了！</h3>
+                                <p class="text-xl">时间：<span id="thiefTime">19:40</span></p>
+                                <button id="nextLevelBtn" class="mt-4 bg-white text-primary hover:bg-gray-100 font-bold py-2 px-6 rounded-lg shadow-lg transform transition-all hover:scale-105 focus:outline-none hidden">
+                                    <i class="fa fa-arrow-right mr-2"></i>下一关
+                                </button>
+                                <button id="resetBtn" class="mt-4 bg-white text-danger hover:bg-gray-100 font-bold py-2 px-6 rounded-lg shadow-lg transform transition-all hover:scale-105 focus:outline-none">
+                                    <i class="fa fa-refresh mr-2"></i>重新开始
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 监控控制按钮 -->
+                    <div class="bg-gray-800 p-3 flex justify-between items-center">
+                        <div class="flex space-x-2">
+                            <button class="w-3 h-3 rounded-full bg-red-500"></button>
+                            <button class="w-3 h-3 rounded-full bg-yellow-500"></button>
+                            <button class="w-3 h-3 rounded-full bg-green-500"></button>
+                        </div>
+                        <div class="text-gray-400 text-sm">监控系统 v1.0</div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- 二分法步骤展示区域 -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-primary mb-4">
+                <i class="fa fa-list-ol mr-2"></i>你的查找过程
+            </h2>
+            
+            <div id="stepsContainer" class="space-y-3">
+                <p class="text-gray-500 italic text-center">还没有开始查找...</p>
+            </div>
+        </div>
+
+        <!-- 通关完成提示 -->
+        <div id="gameComplete" class="bg-success bg-opacity-90 text-white rounded-2xl shadow-lg p-8 mb-8 text-center hidden">
+            <i class="fa fa-trophy text-6xl mb-4 text-yellow-300 animate-pulse-slow"></i>
+            <h2 class="text-3xl font-bold mb-4">恭喜你完成所有关卡！</h2>
+            <p class="text-xl mb-6">你成功运用二分法找到了两个案件的真相！</p>
+            <button id="restartGameBtn" class="bg-white text-success hover:bg-gray-100 font-bold py-3 px-8 rounded-lg shadow-lg transform transition-all hover:scale-105 focus:outline-none">
+                <i class="fa fa-refresh mr-2"></i>重新玩一次
+            </button>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="mt-8 text-center text-gray-500 text-sm">
+            <p>快递侦探 © 2025 - 用二分法解决问题的互动学习工具</p>
+        </footer>
+    </div>
+
+    <script>
+        // 图片URL
+        const images = {
+            before: "https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/1c78de2768d946a997d75835bc1c6563.png~tplv-a9rns2rl98-24:720:720.png?rcl=20251201110252312D5BFA2D158D63FC17&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1765162972&x-signature=kFFpTcSC%2FwlHvC%2F3QULPP1zH7iA%3D",
+            after: "https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/dd940c6f82284b57a254bc3b9a051237.png~tplv-a9rns2rl98-24:720:720.png?rcl=20251201110252312D5BFA2D158D63FC17&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1765162972&x-signature=xDctEsypYmrZZ%2Fp3Vd2mbzKENfg%3D",
+            exact: "https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/b462d652ca3946d09960a681f95408f7.png~tplv-a9rns2rl98-24:720:720.png?rcl=20251201110252312D5BFA2D158D63FC17&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1765162972&x-signature=LXBP7JllyktFhUasA7ljicq%2BlF4%3D"
+        };
+
+        // DOM元素
+        const hourSelect = document.getElementById('hour');
+        const minuteSelect = document.getElementById('minute');
+        const checkBtn = document.getElementById('checkBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const nextLevelBtn = document.getElementById('nextLevelBtn');
+        const restartGameBtn = document.getElementById('restartGameBtn');
+        const initialMessage = document.getElementById('initialMessage');
+        const monitorImage = document.getElementById('monitorImage');
+        const displayTime = document.getElementById('displayTime');
+        const thiefFound = document.getElementById('thiefFound');
+        const thiefTime = document.getElementById('thiefTime');
+        const stepsContainer = document.getElementById('stepsContainer');
+        const currentLevelElement = document.getElementById('currentLevel');
+        const gameCompleteElement = document.getElementById('gameComplete');
+
+        // 游戏状态变量
+        let currentLevel = 1;
+        let targetHour, targetMinute;
+        let steps = [];
+        let rangeStartHour = 6;
+        let rangeStartMinute = 0;
+        let rangeEndHour = 22;
+        let rangeEndMinute = 0;
+        let hasFoundThief = false;
+
+        // 初始化游戏
+        function init() {
+            // 设置第一关目标时间
+            setLevelTargets();
+            
+            // 添加事件监听器
+            checkBtn.addEventListener('click', checkTime);
+            resetBtn.addEventListener('click', resetLevel);
+            nextLevelBtn.addEventListener('click', goToNextLevel);
+            restartGameBtn.addEventListener('click', restartGame);
+            
+            // 初始化步骤容器
+            stepsContainer.innerHTML = '<p class="text-gray-500 italic text-center">还没有开始查找...</p>';
+        }
+
+        // 设置当前关卡的目标时间
+        function setLevelTargets() {
+            if (currentLevel === 1) {
+                // 第一关目标时间：19:40
+                targetHour = 19;
+                targetMinute = 40;
+                currentLevelElement.textContent = '1';
+                gameCompleteElement.classList.add('hidden');
+            } else if (currentLevel === 2) {
+                // 第二关目标时间：随机时间（6:00-22:00之间的整10分钟）
+                targetHour = Math.floor(Math.random() * 17) + 6; // 6-22之间的随机小时
+                const minutes = [0, 10, 20, 30, 40, 50];
+                targetMinute = minutes[Math.floor(Math.random() * minutes.length)]; // 整10分钟
+                currentLevelElement.textContent = '2';
+            }
+        }
+
+        // 检查选择的时间
+        function checkTime() {
+            if (hasFoundThief) return;
+            
+            const selectedHour = parseInt(hourSelect.value);
+            const selectedMinute = parseInt(minuteSelect.value);
+            
+            // 更新显示时间
+            displayTime.textContent = formatTime(selectedHour, selectedMinute);
+            
+            // 隐藏初始消息，显示监控图像
+            initialMessage.classList.add('hidden');
+            monitorImage.classList.remove('hidden');
+            
+            // 根据选择的时间显示不同的图像
+            let imageUrl;
+            let status;
+            
+            if (selectedHour < targetHour || (selectedHour === targetHour && selectedMinute < targetMinute)) {
+                // 快递还在
+                imageUrl = images.before;
+                status = '快递还在货架上';
+                
+                // 更新时间范围
+                rangeStartHour = selectedHour;
+                rangeStartMinute = selectedMinute;
+            } else if (selectedHour > targetHour || (selectedHour === targetHour && selectedMinute > targetMinute)) {
+                // 快递已经被偷
+                imageUrl = images.after;
+                status = '快递已经被偷了';
+                
+                // 更新时间范围
+                rangeEndHour = selectedHour;
+                rangeEndMinute = selectedMinute;
+            } else {
+                // 正好是快递被偷的时间
+                imageUrl = images.exact;
+                status = '找到了！快递被偷的时间！';
+                hasFoundThief = true;
+                
+                // 显示小偷被找到的覆盖层
+                setTimeout(() => {
+                    thiefFound.classList.remove('hidden');
+                    thiefTime.textContent = formatTime(selectedHour, selectedMinute);
+                    
+                    // 如果是第一关，显示下一关按钮
+                    if (currentLevel === 1) {
+                        nextLevelBtn.classList.remove('hidden');
+                    } else {
+                        // 如果是第二关，显示通关提示
+                        setTimeout(() => {
+                            thiefFound.classList.add('hidden');
+                            gameCompleteElement.classList.remove('hidden');
+                        }, 1500);
+                    }
+                }, 1000);
+            }
+            
+            // 设置监控图像
+            monitorImage.style.backgroundImage = `url(${imageUrl})`;
+            monitorImage.style.backgroundSize = 'cover';
+            monitorImage.style.backgroundPosition = 'center';
+            
+            // 添加步骤
+            addStep(selectedHour, selectedMinute, status);
+        }
+
+        // 重置当前关卡
+        function resetLevel() {
+            // 重置状态变量
+            steps = [];
+            rangeStartHour = 6;
+            rangeStartMinute = 0;
+            rangeEndHour = 22;
+            rangeEndMinute = 0;
+            hasFoundThief = false;
+            
+            // 重置UI
+            initialMessage.classList.remove('hidden');
+            monitorImage.classList.add('hidden');
+            thiefFound.classList.add('hidden');
+            nextLevelBtn.classList.add('hidden');
+            monitorImage.style.backgroundImage = '';
+            
+            // 重置时间选择器
+            hourSelect.value = '13'; // 默认选中中间时间
+            minuteSelect.value = '0';
+            displayTime.textContent = '13:00';
+            
+            // 重置步骤容器
+            stepsContainer.innerHTML = '<p class="text-gray-500 italic text-center">还没有开始查找...</p>';
+        }
+
+        // 进入下一关
+        function goToNextLevel() {
+            if (currentLevel < 2) {
+                currentLevel++;
+                setLevelTargets();
+                resetLevel();
+            }
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            currentLevel = 1;
+            setLevelTargets();
+            resetLevel();
+        }
+
+        // 添加步骤
+        function addStep(hour, minute, status) {
+            steps.push({
+                hour,
+                minute,
+                status
+            });
+            
+            // 更新步骤容器
+            if (steps.length === 1) {
+                stepsContainer.innerHTML = '';
+            }
+            
+            const stepElement = document.createElement('div');
+            stepElement.className = 'flex items-center p-3 rounded-lg border-2 border-gray-200 hover:bg-gray-50 transition-colors';
+            
+            const timeClass = status.includes('找到了') ? 'text-danger font-bold' : 
+                             status.includes('还在') ? 'text-success' : 'text-warning';
+            
+            stepElement.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold mr-3">
+                    ${steps.length}
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center">
+                        <span class="font-mono text-lg ${timeClass}">${formatTime(hour, minute)}</span>
+                        <span class="mx-2 text-gray-400">|</span>
+                        <span>${status}</span>
+                    </div>
+                    <div class="text-sm text-gray-500 mt-1">
+                        时间范围: ${formatTime(rangeStartHour, rangeStartMinute)} - ${formatTime(rangeEndHour, rangeEndMinute)}
+                    </div>
+                </div>
+            `;
+            
+            stepsContainer.appendChild(stepElement);
+            
+            // 滚动到最新步骤
+            stepsContainer.scrollTop = stepsContainer.scrollHeight;
+        }
+
+        // 格式化时间
+        function formatTime(hour, minute) {
+            return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
