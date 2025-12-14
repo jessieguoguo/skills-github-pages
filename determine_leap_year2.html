@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>闰年探究 - 流程图任务</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#10b981',
+                        accent: '#60a5fa',
+                        neutral: '#f3f4f6',
+                        'neutral-dark': '#d1d5db',
+                        'success': '#10b981',
+                        'error': '#ef4444',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .btn-primary {
+                @apply bg-primary hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors duration-300;
+            }
+            .btn-secondary {
+                @apply bg-secondary hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition-colors duration-300;
+            }
+            .btn-secondary:disabled {
+                @apply bg-gray-300 cursor-not-allowed hover:bg-gray-300;
+            }
+            .input-field {
+                @apply border border-neutral-dark rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+            }
+            .card {
+                @apply bg-white rounded-lg shadow-card p-6;
+            }
+            .result-success {
+                @apply border-success bg-green-50 text-success;
+            }
+            .result-error {
+                @apply border-error bg-red-50 text-error;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- 标题区域 -->
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-3">闰年探究</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                通过完成以下任务，深入了解闰年的判断规则和流程图执行路径。
+            </p>
+        </header>
+
+        <!-- 任务3：完善流程图 -->
+        <section class="card mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">第3关：完善流程图</h2>
+            
+            <div class="flex flex-col md:flex-row items-center justify-center gap-8">
+                <div class="md:w-1/2">
+                    <img src="https://cdn.jsdelivr.net/gh/jessieguoguo/my_image/pic1.jpg" 
+                         alt="闰年流程图" 
+                         class="w-full rounded-lg shadow-sm">
+                </div>
+                
+                <div class="md:w-1/2 w-full">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="condition1" class="block text-sm font-medium text-gray-700 mb-1">判断条件1：</label>
+                            <input type="text" id="condition1" class="input-field w-full" placeholder="请输入判断条件1">
+                        </div>
+                        
+                        <div>
+                            <label for="condition2" class="block text-sm font-medium text-gray-700 mb-1">判断条件2：</label>
+                            <input type="text" id="condition2" class="input-field w-full" placeholder="请输入判断条件2">
+                        </div>
+                        
+                        <button id="verifyConditionsBtn" class="btn-primary w-full mt-4">
+                            <i class="fa fa-check-circle mr-1"></i> 验证
+                        </button>
+                        
+                        <button id="nextTaskBtn" class="btn-secondary w-full mt-2" disabled>
+                            <i class="fa fa-arrow-right mr-1"></i> 下一关
+                        </button>
+                        
+                        <div id="conditionsResult" class="hidden mt-4 p-3 rounded-lg border"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 任务4：梳理流程图执行路径 -->
+        <section id="task4" class="card mb-8 hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">第4关：梳理流程图执行路径</h2>
+            
+            <div class="flex flex-col md:flex-row items-center justify-center gap-8">
+                <div class="md:w-1/2">
+                    <img src="https://cdn.jsdelivr.net/gh/jessieguoguo/my_image/pic2.jpg" 
+                         alt="闰年流程图执行路径" 
+                         class="w-full rounded-lg shadow-sm">
+                </div>
+                
+                <div class="md:w-1/2 w-full">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="path2024" class="block text-sm font-medium text-gray-700 mb-1">（1）2024年：</label>
+                            <input type="text" id="path2024" class="input-field w-full" placeholder="请输入执行路径">
+                        </div>
+                        
+                        <div>
+                            <label for="path2033" class="block text-sm font-medium text-gray-700 mb-1">（2）2033年：</label>
+                            <input type="text" id="path2033" class="input-field w-full" placeholder="请输入执行路径">
+                        </div>
+                        
+                        <div>
+                            <label for="path1900" class="block text-sm font-medium text-gray-700 mb-1">（3）1900年：</label>
+                            <input type="text" id="path1900" class="input-field w-full" placeholder="请输入执行路径">
+                        </div>
+                        
+                        <div>
+                            <label for="path2400" class="block text-sm font-medium text-gray-700 mb-1">（4）2400年：</label>
+                            <input type="text" id="path2400" class="input-field w-full" placeholder="请输入执行路径">
+                        </div>
+                        
+                        <button id="verifyPathsBtn" class="btn-primary w-full mt-4">
+                            <i class="fa fa-check-circle mr-1"></i> 验证
+                        </button>
+                        
+                        <div id="pathsResult" class="hidden mt-4 p-3 rounded-lg border"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 底部信息区域 -->
+        <footer class="text-center text-gray-600 text-sm">
+            <p>© 2025 闰年探究工具 | 一个交互式学习资源</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM 元素
+        const condition1Input = document.getElementById('condition1');
+        const condition2Input = document.getElementById('condition2');
+        const verifyConditionsBtn = document.getElementById('verifyConditionsBtn');
+        const nextTaskBtn = document.getElementById('nextTaskBtn');
+        const conditionsResult = document.getElementById('conditionsResult');
+        const task4Section = document.getElementById('task4');
+        
+        const path2024Input = document.getElementById('path2024');
+        const path2033Input = document.getElementById('path2033');
+        const path1900Input = document.getElementById('path1900');
+        const path2400Input = document.getElementById('path2400');
+        const verifyPathsBtn = document.getElementById('verifyPathsBtn');
+        const pathsResult = document.getElementById('pathsResult');
+        
+        // 任务3：验证判断条件（新增非空校验）
+        verifyConditionsBtn.addEventListener('click', function() {
+            // 获取原始输入值（用于判断是否为空）
+            const rawCondition1 = condition1Input.value.trim();
+            const rawCondition2 = condition2Input.value.trim();
+            
+            // 第一步：非空校验
+            if (!rawCondition1 || !rawCondition2) {
+                conditionsResult.className = 'mt-4 p-3 rounded-lg border result-error';
+                conditionsResult.innerHTML = '<i class="fa fa-times-circle mr-1"></i> 错误：判断条件不能为空，请完整填写！';
+                nextTaskBtn.disabled = true;
+                conditionsResult.classList.remove('hidden');
+                return; // 终止后续逻辑
+            }
+            
+            // 处理输入值（移除标点符号后比较）
+            const condition1 = rawCondition1.toLowerCase().replace(/[,.；、？！，。？！;?!\s]/g, '');
+            const condition2 = rawCondition2.toLowerCase().replace(/[,.；、？！，。？！;?!\s]/g, '');
+            
+            // 正确答案的变体（移除标点符号）
+            const correctCondition1Variants = [
+                '能被4整除不能被100整除',
+                '能被4整除不被100整除',
+                '能被4整除且不能被100整除',
+                '能被4整除且不被100整除',
+                '能被4整除而且不能被100整除',
+                '能被4整除而且不被100整除',
+                '能被4整除但是不能被100整除',
+                '能被4整除但是不被100整除',
+                '能被4整除但不能被100整除',
+                '能被4整除但不被100整除',
+                '被4整除不被100整除',
+                '被4整除不能被100整除',
+                '被4整除且不被100整除',
+                '被4整除且不能被100整除',
+                '被4整除而且不被100整除',
+                '被4整除而且不能被100整除',
+                '被4整除但是不被100整除',
+                '被4整除但是不能被100整除',
+                '被4整除但不被100整除',
+                '被4整除但不能被100整除'
+            ].map(v => v.replace(/[,.；、？！，。？！;?!\s]/g, ''));
+            
+            const correctCondition2Variants = [
+                '能被400整除',
+                '被400整除'
+            ].map(v => v.replace(/[,.；、？！，。？！;?!\s]/g, ''));
+            
+            // 检查条件是否正确（支持部分匹配）
+            const isCondition1Correct = correctCondition1Variants.some(variant => 
+                condition1.includes(variant) || variant.includes(condition1)
+            );
+            const isCondition2Correct = correctCondition2Variants.some(variant => 
+                condition2.includes(variant) || variant.includes(condition2)
+            );
+            
+            // 结果判断
+            if (isCondition1Correct && isCondition2Correct) {
+                conditionsResult.className = 'mt-4 p-3 rounded-lg border result-success';
+                conditionsResult.innerHTML = '<i class="fa fa-check-circle mr-1"></i> 恭喜！判断条件填写正确。';
+                nextTaskBtn.disabled = false;
+            } else {
+                conditionsResult.className = 'mt-4 p-3 rounded-lg border result-error';
+                conditionsResult.innerHTML = '<i class="fa fa-times-circle mr-1"></i> 判断条件填写不正确，请重新尝试。';
+                nextTaskBtn.disabled = true;
+            }
+            
+            conditionsResult.classList.remove('hidden');
+        });
+        
+        // 进入下一关
+        nextTaskBtn.addEventListener('click', function() {
+            task4Section.classList.remove('hidden');
+            task4Section.scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        // 任务4：验证执行路径（新增非空校验）
+        verifyPathsBtn.addEventListener('click', function() {
+            // 获取原始输入值（用于非空校验）
+            const rawPath2024 = path2024Input.value.trim();
+            const rawPath2033 = path2033Input.value.trim();
+            const rawPath1900 = path1900Input.value.trim();
+            const rawPath2400 = path2400Input.value.trim();
+            
+            // 第一步：非空校验
+            if (!rawPath2024 || !rawPath2033 || !rawPath1900 || !rawPath2400) {
+                pathsResult.className = 'mt-4 p-3 rounded-lg border result-error';
+                pathsResult.innerHTML = '<i class="fa fa-times-circle mr-1"></i> 错误：执行路径不能为空，请完整填写！';
+                pathsResult.classList.remove('hidden');
+                return; // 终止后续逻辑
+            }
+            
+            // 处理输入值（转大写）
+            const path2024 = rawPath2024.toUpperCase();
+            const path2033 = rawPath2033.toUpperCase();
+            const path1900 = rawPath1900.toUpperCase();
+            const path2400 = rawPath2400.toUpperCase();
+            
+            // 正确答案
+            const correctPath2024 = 'ABCDH';
+            const correctPath2033 = 'ABCEGH';
+            const correctPath1900 = 'ABCEGH';
+            const correctPath2400 = 'ABCEFH';
+            
+            // 检查每个路径是否正确
+            const isPath2024Correct = path2024 === correctPath2024;
+            const isPath2033Correct = path2033 === correctPath2033;
+            const isPath1900Correct = path1900 === correctPath1900;
+            const isPath2400Correct = path2400 === correctPath2400;
+            
+            const allCorrect = isPath2024Correct && isPath2033Correct && isPath1900Correct && isPath2400Correct;
+            
+            // 结果判断
+            if (allCorrect) {
+                pathsResult.className = 'mt-4 p-3 rounded-lg border result-success';
+                pathsResult.innerHTML = '<i class="fa fa-check-circle mr-1"></i> 恭喜！所有执行路径填写正确。';
+            } else {
+                pathsResult.className = 'mt-4 p-3 rounded-lg border result-error';
+                
+                let errorMessage = '<i class="fa fa-times-circle mr-1"></i> 以下执行路径填写不正确：<ul class="mt-2">';
+                
+                if (!isPath2024Correct) {
+                    errorMessage += `<li>2024年</li>`;
+                }
+                if (!isPath2033Correct) {
+                    errorMessage += `<li>2033年</li>`;
+                }
+                if (!isPath1900Correct) {
+                    errorMessage += `<li>1900年</li>`;
+                }
+                if (!isPath2400Correct) {
+                    errorMessage += `<li>2400年</li>`;
+                }
+                
+                errorMessage += '</ul>';
+                pathsResult.innerHTML = errorMessage;
+            }
+            
+            pathsResult.classList.remove('hidden');
+        });
+        
+        // 回车键快捷操作
+        condition1Input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') condition2Input.focus();
+        });
+        condition2Input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verifyConditionsBtn.click();
+        });
+        path2024Input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') path2033Input.focus();
+        });
+        path2033Input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') path1900Input.focus();
+        });
+        path1900Input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') path2400Input.focus();
+        });
+        path2400Input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verifyPathsBtn.click();
+        });
+    </script>
+</body>
+</html>
