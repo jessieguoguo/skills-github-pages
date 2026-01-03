@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜猜我几岁？</title>
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 50%, #FFDAB9 100%);
+            color: #333;
+            overflow: hidden;
+        }
+
+        /* 游戏容器 */
+        .game-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            max-width: 1920px;
+            max-height: 1080px;
+            margin: 0 auto;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.95);
+            border-right: 5px solid #FF6347;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar h2 {
+            color: #FF6347;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 {
+            color: #4682B4;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .level-status, .game-stats {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 3px solid #4682B4;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .level-item, .stat-item {
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .level-item span, .stat-item span {
+            color: #FF6347;
+        }
+
+        .sidebar-image {
+            margin-top: auto;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .sidebar-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 3px solid #4682B4;
+        }
+
+        /* 主游戏区域 */
+        .main-game {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .main-game h1 {
+            color: #FFFFFF;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 提示信息区域 */
+        .hint-message {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+            border: 4px solid #4682B4;
+        }
+
+        .hint-message p {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4682B4;
+            text-align: center;
+        }
+
+        /* 数字按钮网格 */
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 8px;
+            width: 90%;
+            height: 60vh;
+            max-height: 600px;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 数字按钮样式 */
+        .number-btn {
+            background: white;
+            color: #1a3a5f;
+            border: 3px solid #FFA500;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .number-btn:hover {
+            background: #fff3e0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .number-btn:active {
+            transform: translateY(0);
+        }
+
+        .number-btn.correct {
+            background: #98FB98;
+            border-color: #32CD32;
+            color: #228B22;
+            animation: pulse 1s infinite;
+        }
+
+        .number-btn.wrong {
+            background: #c4c4c4;
+            border-color: #bdbdbd;
+            color: #000000;
+        }
+
+        /* 下一关按钮 */
+        .next-level {
+            margin-top: 20px;
+        }
+
+        #next-level-btn {
+            background: #4682B4;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #next-level-btn:hover {
+            background: #1E90FF;
+            transform: translateY(-3px);
+            box-shadow: 7px 7px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 烟花特效容器 */
+        #fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* 烟花粒子 */
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            animation: explode 1s ease-out forwards;
+        }
+
+        /* 动画效果 */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes explode {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(5) translateY(50px);
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1600px) {
+            .number-btn {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 1400px) {
+            .number-btn {
+                font-size: 14px;
+            }
+            
+            .sidebar {
+                width: 200px;
+            }
+            
+            .sidebar h2 {
+                font-size: 20px;
+            }
+            
+            .level-item, .stat-item {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .number-grid {
+                grid-template-columns: repeat(15, 1fr);
+                grid-template-rows: repeat(7, 1fr);
+            }
+        }
+
+        /* 16:9比例优化 */
+        @media (aspect-ratio: 16/9) {
+            .number-grid {
+                height: 65vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <h2>游戏信息</h2>
+            <div class="level-status">
+                <h3>关卡进度</h3>
+                <div class="level-item">第1关: <span id="level1-status">未完成</span></div>
+                <div class="level-item">第2关: <span id="level2-status">未开始</span></div>
+                <div class="level-item">第3关: <span id="level3-status">未开始</span></div>
+            </div>
+            
+            <div class="game-stats">
+                <h3>当前关卡</h3>
+                <div class="stat-item">关卡: <span id="current-level">1</span></div>
+                <div class="stat-item">猜测次数: <span id="guess-count">0</span></div>
+                <div class="stat-item">当前积分: <span id="current-score">0</span></div>
+            </div>
+            
+            <div class="sidebar-image">
+                <img src="https://cdn.jsdelivr.net/gh/jessieguoguo/my_image/someone.png" alt="游戏角色">
+            </div>
+        </div>
+        
+        <!-- 游戏主区域 -->
+        <div class="main-game">
+            <h1>猜猜我几岁？</h1>
+            
+            <div class="hint-message">
+                <p id="hint-text">请点击下方数字开始猜测！</p>
+            </div>
+            
+            <div class="number-grid">
+                <!-- 数字按钮将通过JavaScript动态生成 -->
+            </div>
+            
+            <div class="next-level" id="next-level" style="display: none;">
+                <button id="next-level-btn">下一关</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 烟花特效容器 -->
+    <div id="fireworks-container"></div>
+    
+    <script>
+        // 游戏状态管理
+        let gameState = {
+            currentLevel: 1,
+            totalLevels: 3,
+            correctNumber: null,
+            guessCount: 0,
+            totalScore: 0,
+            excludedNumbers: [50, 75, 25, 12, 37, 63, 87],
+            levelHistory: [],
+            isPlaying: true
+        };
+
+        // DOM元素引用
+        const elements = {
+            level1Status: document.getElementById('level1-status'),
+            level2Status: document.getElementById('level2-status'),
+            level3Status: document.getElementById('level3-status'),
+            currentLevel: document.getElementById('current-level'),
+            guessCount: document.getElementById('guess-count'),
+            currentScore: document.getElementById('current-score'),
+            hintText: document.getElementById('hint-text'),
+            numberGrid: document.querySelector('.number-grid'),
+            nextLevel: document.getElementById('next-level'),
+            nextLevelBtn: document.getElementById('next-level-btn'),
+            fireworksContainer: document.getElementById('fireworks-container')
+        };
+
+        // 初始化游戏
+        function initGame() {
+            // 设置当前关卡的正确数字
+            setCorrectNumber();
+            
+            // 重置当前关卡状态
+            gameState.guessCount = 0;
+            gameState.isPlaying = true;
+            
+            // 更新UI
+            updateUI();
+            
+            // 生成数字按钮
+            generateNumberButtons();
+            
+            // 隐藏下一关按钮
+            elements.nextLevel.style.display = 'none';
+        }
+
+        // 设置当前关卡的正确数字
+        function setCorrectNumber() {
+            if (gameState.currentLevel === 1) {
+                gameState.correctNumber = 39;
+            } else {
+                let previousNumber = gameState.levelHistory.length > 0 ? 
+                    gameState.levelHistory[gameState.levelHistory.length - 1].correctNumber : null;
+                
+                do {
+                    gameState.correctNumber = Math.floor(Math.random() * 100) + 1;
+                } while (
+                    gameState.excludedNumbers.includes(gameState.correctNumber) || 
+                    gameState.correctNumber === previousNumber
+                );
+            }
+        }
+
+        // 更新UI
+        function updateUI() {
+            // 更新关卡状态
+            updateLevelStatus();
+            
+            // 更新当前关卡信息
+            elements.currentLevel.textContent = gameState.currentLevel;
+            elements.guessCount.textContent = gameState.guessCount;
+            elements.currentScore.textContent = gameState.totalScore;
+            
+            // 重置提示信息
+            elements.hintText.textContent = '请点击下方数字开始猜测！';
+            elements.hintText.style.color = '#4682B4';
+        }
+
+        // 更新关卡状态显示
+        function updateLevelStatus() {
+            const statuses = [elements.level1Status, elements.level2Status, elements.level3Status];
+            
+            for (let i = 0; i < gameState.totalLevels; i++) {
+                if (i < gameState.currentLevel - 1) {
+                    statuses[i].textContent = '已完成';
+                    statuses[i].style.color = '#008000';
+                } else if (i === gameState.currentLevel - 1) {
+                    statuses[i].textContent = '进行中';
+                    statuses[i].style.color = '#FFA500';
+                } else {
+                    statuses[i].textContent = '未开始';
+                    statuses[i].style.color = '#808080';
+                }
+            }
+        }
+
+        // 生成数字按钮网格
+        function generateNumberButtons() {
+            elements.numberGrid.innerHTML = '';
+            
+            for (let i = 1; i <= 100; i++) {
+                const button = document.createElement('button');
+                button.className = 'number-btn';
+                button.textContent = i;
+                button.addEventListener('click', () => handleGuess(i));
+                elements.numberGrid.appendChild(button);
+            }
+        }
+
+        // 处理用户猜测
+        function handleGuess(guessedNumber) {
+            if (!gameState.isPlaying) return;
+            
+            // 增加猜测次数
+            gameState.guessCount++;
+            
+            // 获取点击的按钮
+            const button = elements.numberGrid.children[guessedNumber - 1];
+            
+            if (guessedNumber === gameState.correctNumber) {
+                // 猜对了
+                handleCorrectGuess(button);
+            } else {
+                // 猜错了
+                handleWrongGuess(button, guessedNumber);
+            }
+            
+            // 更新UI
+            elements.guessCount.textContent = gameState.guessCount;
+        }
+
+        // 处理猜对的情况
+        function handleCorrectGuess(button) {
+            // 更新按钮样式
+            button.classList.add('correct');
+            button.disabled = true;
+            
+            // 显示提示信息
+            elements.hintText.textContent = '恭喜你猜对啦！';
+            elements.hintText.style.color = '#008000';
+            
+            // 触发烟花特效
+            createFireworks();
+            
+            // 计算并添加积分
+            calculateScore();
+            
+            // 记录关卡历史
+            recordLevelHistory();
+            
+            // 游戏暂停
+            gameState.isPlaying = false;
+            
+            // 显示下一关按钮或结束游戏
+            if (gameState.currentLevel < gameState.totalLevels) {
+                elements.nextLevel.style.display = 'block';
+            } else {
+                // 所有关卡完成，显示结算页面
+                setTimeout(showResult, 2000);
+            }
+        }
+
+        // 处理猜错的情况
+        function handleWrongGuess(button, guessedNumber) {
+            // 更新按钮样式
+            button.classList.add('wrong');
+            button.disabled = true;
+            
+            // 显示提示信息
+            if (guessedNumber > gameState.correctNumber) {
+                elements.hintText.textContent = '猜大了！';
+                elements.hintText.style.color = '#FF0000';
+                
+                // 禁用所有大于猜测数字的按钮（这些都是不正确的）
+                for (let i = guessedNumber; i <= 100; i++) {
+                    const wrongButton = elements.numberGrid.children[i - 1];
+                    if (wrongButton && !wrongButton.disabled) {
+                        wrongButton.classList.add('wrong');
+                        wrongButton.disabled = true;
+                    }
+                }
+            } else {
+                elements.hintText.textContent = '猜小了！';
+                elements.hintText.style.color = '#FFA500';
+                
+                // 禁用所有小于猜测数字的按钮（这些都是不正确的）
+                for (let i = 1; i <= guessedNumber; i++) {
+                    const wrongButton = elements.numberGrid.children[i - 1];
+                    if (wrongButton && !wrongButton.disabled) {
+                        wrongButton.classList.add('wrong');
+                        wrongButton.disabled = true;
+                    }
+                }
+            }
+        }
+
+        // 创建烟花特效
+        function createFireworks() {
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    
+                    // 随机颜色
+                    const colors = ['#FFD700', '#FF6347', '#4682B4', '#98FB98', '#FFB6C1', '#9370DB'];
+                    firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    // 随机位置
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight;
+                    firework.style.left = x + 'px';
+                    firework.style.top = y + 'px';
+                    
+                    // 随机动画延迟
+                    firework.style.animationDelay = Math.random() * 0.5 + 's';
+                    
+                    // 添加到容器
+                    elements.fireworksContainer.appendChild(firework);
+                    
+                    // 1秒后移除
+                    setTimeout(() => firework.remove(), 1000);
+                }, i * 50);
+            }
+        }
+
+        // 计算积分
+        function calculateScore() {
+            let levelScore = 0;
+            let bonusScore = 0;
+            
+            if (gameState.currentLevel === 1) {
+                levelScore = 10;
+                if (gameState.guessCount <= 7) bonusScore = 10;
+            } else {
+                levelScore = 20;
+                if (gameState.guessCount <= 7) bonusScore = 20;
+            }
+            
+            // 总积分
+            const totalLevelScore = levelScore + bonusScore;
+            gameState.totalScore += totalLevelScore;
+            
+            // 更新UI
+            elements.currentScore.textContent = gameState.totalScore;
+        }
+
+        // 记录关卡历史
+        function recordLevelHistory() {
+            gameState.levelHistory.push({
+                level: gameState.currentLevel,
+                correctNumber: gameState.correctNumber,
+                guessCount: gameState.guessCount,
+                score: gameState.totalScore - (gameState.levelHistory.reduce((sum, h) => sum + h.score, 0) || 0)
+            });
+        }
+
+        // 下一关
+        function nextLevel() {
+            // 增加关卡
+            gameState.currentLevel++;
+            
+            // 初始化新关卡
+            initGame();
+        }
+
+        // 显示结算页面
+        function showResult() {
+            // 创建结算页面
+            const resultHTML = `
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 2000;
+                    font-family: 'Microsoft YaHei', sans-serif;
+                ">
+                    <div style="
+                        background: white;
+                        padding: 40px;
+                        border-radius: 20px;
+                        max-width: 600px;
+                        text-align: center;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                    ">
+                        <h2 style="color: #FF6347; font-size: 36px; margin-bottom: 30px;">🎉 游戏结束！🎉</h2>
+                        
+                        <div style="margin-bottom: 30px; font-size: 18px;">
+                            <p style="margin-bottom: 10px;">🏆 总积分: <strong>${gameState.totalScore}</strong></p>
+                            <p style="margin-bottom: 10px;">✅ 完成关卡: ${gameState.levelHistory.length}/${gameState.totalLevels}</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 30px; text-align: left;">
+                            <h3 style="color: #4682B4; margin-bottom: 15px; font-size: 22px;">各关卡详情:</h3>
+                            ${gameState.levelHistory.map(history => `
+                                <p style="margin-bottom: 8px; padding: 8px; background: #f0f8ff; border-radius: 8px;">
+                                    第${history.level}关: 正确年龄 ${history.correctNumber}, 猜测次数 ${history.guessCount}
+                                </p>
+                            `).join('')}
+                        </div>
+                        
+                        <button onclick="restartGame()" style="
+                            background: #4682B4;
+                            color: white;
+                            border: none;
+                            padding: 15px 40px;
+                            font-size: 20px;
+                            font-weight: bold;
+                            border-radius: 30px;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                        ">
+                            🔄 重新开始
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // 添加到文档
+            document.body.insertAdjacentHTML('beforeend', resultHTML);
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            // 重置游戏状态
+            gameState = {
+                currentLevel: 1,
+                totalLevels: 3,
+                correctNumber: null,
+                guessCount: 0,
+                totalScore: 0,
+                excludedNumbers: [50, 75, 25, 12, 37, 63, 87],
+                levelHistory: [],
+                isPlaying: true
+            };
+            
+            // 移除结算页面
+            const resultPage = document.querySelector('div[style*="position: fixed;"]');
+            if (resultPage) resultPage.remove();
+            
+            // 初始化游戏
+            initGame();
+        }
+
+        // 事件监听
+        elements.nextLevelBtn.addEventListener('click', nextLevel);
+
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
